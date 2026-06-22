@@ -33,7 +33,7 @@ export function HomePage() {
           className="order-1 h-[300px] sm:h-[380px] lg:order-2 lg:h-[560px]"
         >
           <Suspense fallback={<div className="h-full w-full rounded-2xl bg-canvas" />}>
-            <PortraitScene photo={profile.photo} />
+            <PortraitScene photo={profile.photo} name={profile.name} caption={site.title} />
           </Suspense>
         </motion.div>
 

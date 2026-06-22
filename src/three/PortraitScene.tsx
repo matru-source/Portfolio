@@ -1,132 +1,102 @@
-import { Suspense, useEffect, useRef, useState } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { ContactShadows, RoundedBox } from '@react-three/drei'
-import * as THREE from 'three'
-import { ThreeBoundary } from './ThreeBoundary'
+import { useEffect, useRef, useState } from 'react'
 import { usePrefersReducedMotion } from '@/hooks'
 import { cn } from '@/lib/cn'
 
-const TWO_PI = Math.PI * 2
-
-function PortraitCard({ photo, reduced }: { photo: string; reduced: boolean }) {
-  const group = useRef<THREE.Group>(null!)
-  const [hovered, setHovered] = useState(false)
-  const [tex, setTex] = useState<THREE.Texture | null>(null)
-
-  // Load the photo as a texture (gracefully no-ops if missing).
-  useEffect(() => {
-    if (!photo) {
-      setTex(null)
-      return
-    }
-    let active = true
-    new THREE.TextureLoader().load(
-      photo,
-      (t) => {
-        if (!active) return
-        t.colorSpace = THREE.SRGBColorSpace
-        t.anisotropy = 4
-        setTex(t)
-      },
-      undefined,
-      () => active && setTex(null),
-    )
-    return () => {
-      active = false
-    }
-  }, [photo])
-
-  useFrame((state, delta) => {
-    const g = group.current
-    if (!g) return
-    const t = state.clock.elapsedTime
-
-    if (hovered && !reduced) {
-      // Spin while hovered.
-      g.rotation.y += delta * 1.9
-      g.rotation.x += (0 - g.rotation.x) * 0.1
-    } else {
-      // Ease back to the nearest front-facing orientation + a slight mouse tilt
-      // (nearest full-turn multiple avoids a long unwind after spinning).
-      const base = Math.round(g.rotation.y / TWO_PI) * TWO_PI
-      const targetY = base + (reduced ? 0 : state.pointer.x * 0.4)
-      const targetX = reduced ? 0 : -state.pointer.y * 0.22
-      g.rotation.y += (targetY - g.rotation.y) * 0.08
-      g.rotation.x += (targetX - g.rotation.x) * 0.08
-    }
-    g.position.y = reduced ? 0 : Math.sin(t * 0.8) * 0.07
-  })
-
-  return (
-    <group
-      ref={group}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-    >
-      {/* Card body (frame) */}
-      <RoundedBox args={[2.7, 3.0, 0.16]} radius={0.14} smoothness={4}>
-        <meshStandardMaterial color="#FAF7F1" roughness={0.7} metalness={0} />
-      </RoundedBox>
-
-      {/* Photo on the front */}
-      <mesh position={[0, 0.18, 0.085]}>
-        <planeGeometry args={[2.32, 2.32]} />
-        <meshStandardMaterial
-          map={tex}
-          color={tex ? '#ffffff' : '#E6E0D4'}
-          roughness={0.55}
-          toneMapped={false}
-        />
-      </mesh>
-
-      {/* Terracotta nameplate strip */}
-      <mesh position={[0, -1.18, 0.085]}>
-        <planeGeometry args={[2.32, 0.42]} />
-        <meshStandardMaterial color="#B4592F" roughness={0.6} />
-      </mesh>
-
-      {/* Warm card back (revealed on spin) */}
-      <mesh position={[0, 0, -0.085]} rotation={[0, Math.PI, 0]}>
-        <planeGeometry args={[2.4, 2.7]} />
-        <meshStandardMaterial color="#B4592F" roughness={0.6} />
-      </mesh>
-    </group>
-  )
+function initialsOf(name: string) {
+  const parts = name.trim().split(/\s+/)
+  return ((parts[0]?.[0] ?? '') + (parts[parts.length - 1]?.[0] ?? '')).toUpperCase()
 }
 
-function Fallback() {
-  return <div className="h-full w-full rounded-2xl bg-gradient-to-br from-primary-50 to-canvas" />
+interface PortraitSceneProps {
+  photo: string
+  name?: string
+  caption?: string
+  className?: string
 }
 
-/** Interactive 3D portrait card — floats, tilts to the mouse, spins on hover. */
-export function PortraitScene({ photo, className }: { photo: string; className?: string }) {
+/**
+ * Interactive 3D portrait card (CSS 3D — uses a normal <img>, so any photo
+ * loads without WebGL/CORS issues). Floats and gently sways; spins on hover.
+ */
+export function PortraitScene({
+  photo,
+  name = 'Matru Panda',
+  caption = 'Data Analyst',
+  className,
+}: PortraitSceneProps) {
   const reduced = usePrefersReducedMotion()
+  const cardRef = useRef<HTMLDivElement>(null)
+  const hovered = useRef(false)
+  const rotY = useRef(0)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => setFailed(false), [photo])
+
+  useEffect(() => {
+    let raf = 0
+    let t = 0
+    const loop = () => {
+      t += 0.016
+      let display: number
+      if (hovered.current && !reduced) {
+        rotY.current += 2.4 // spin while hovered
+        display = rotY.current
+      } else {
+        const base = Math.round(rotY.current / 360) * 360 // settle to nearest front
+        rotY.current += (base - rotY.current) * 0.08
+        display = rotY.current + (reduced ? 0 : Math.sin(t * 0.8) * 5) // gentle sway
+      }
+      const floatY = reduced ? 0 : Math.sin(t * 0.9) * 8
+      if (cardRef.current) {
+        cardRef.current.style.transform = `translateY(${floatY}px) rotateY(${display}deg)`
+      }
+      raf = requestAnimationFrame(loop)
+    }
+    raf = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(raf)
+  }, [reduced])
+
+  const initials = initialsOf(name)
+  const showPhoto = Boolean(photo) && !failed
 
   return (
-    <div className={cn('h-full w-full', className)}>
-      <ThreeBoundary fallback={<Fallback />}>
-        <Canvas
-          dpr={[1, 2]}
-          camera={{ position: [0, 0, 6], fov: 36 }}
-          gl={{ antialias: true, alpha: true }}
-          style={{ touchAction: 'pan-y' }}
-        >
-          <ambientLight intensity={0.95} />
-          <directionalLight position={[4, 6, 6]} intensity={1.2} />
-          <directionalLight position={[-5, 2, 3]} intensity={0.4} color="#E2B48C" />
-          <Suspense fallback={null}>
-            <PortraitCard photo={photo} reduced={reduced} />
-          </Suspense>
-          <ContactShadows
-            position={[0, -1.7, 0]}
-            opacity={0.26}
-            scale={6}
-            blur={2.6}
-            far={4}
-            color="#3A2A1E"
-          />
-        </Canvas>
-      </ThreeBoundary>
+    <div
+      className={cn(
+        'flex h-full w-full items-center justify-center [perspective:1200px]',
+        className,
+      )}
+    >
+      <div
+        ref={cardRef}
+        onPointerEnter={() => (hovered.current = true)}
+        onPointerLeave={() => (hovered.current = false)}
+        className="relative aspect-[3/4] h-[86%] max-h-[520px] will-change-transform [transform-style:preserve-3d]"
+      >
+        {/* Front — the photo */}
+        <div className="absolute inset-0 overflow-hidden rounded-2xl border border-line bg-surface shadow-card [backface-visibility:hidden]">
+          {showPhoto ? (
+            <img
+              src={photo}
+              alt={name}
+              draggable={false}
+              onError={() => setFailed(true)}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-50 to-canvas">
+              <span className="font-display text-5xl font-bold text-primary/40">{initials}</span>
+            </div>
+          )}
+          <div className="absolute inset-x-0 bottom-0 bg-primary py-2 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-surface">
+            {caption}
+          </div>
+        </div>
+
+        {/* Back — revealed on spin */}
+        <div className="absolute inset-0 grid place-items-center rounded-2xl bg-primary shadow-card [backface-visibility:hidden] [transform:rotateY(180deg)]">
+          <span className="font-display text-6xl font-bold text-surface/90">{initials}</span>
+        </div>
+      </div>
     </div>
   )
 }
