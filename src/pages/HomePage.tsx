@@ -6,6 +6,9 @@ import { Section, SectionHeading, Reveal } from '@/components/ui'
 import { useContent } from '@/content'
 
 const HeroScene = lazy(() => import('@/three/HeroScene').then((m) => ({ default: m.HeroScene })))
+const PortraitScene = lazy(() =>
+  import('@/three/PortraitScene').then((m) => ({ default: m.PortraitScene })),
+)
 
 export function HomePage() {
   const { profile, site, projects, certifications, experience } = useContent()
@@ -21,77 +24,92 @@ export function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="container flex min-h-[calc(100vh-5rem)] flex-col justify-between py-10">
-        {/* top meta */}
-        <div className="flex items-start justify-between gap-6">
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="eyebrow max-w-[16rem] leading-relaxed"
-          >
-            {site.title} — based in {profile.location}
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="eyebrow text-right leading-relaxed"
-          >
-            Portfolio
-            <br />© {new Date().getFullYear()}
-          </motion.p>
-        </div>
-
-        {/* giant name */}
-        <h1 className="display-hero my-8 text-[clamp(2.75rem,13vw,11rem)] text-ink">
-          {nameWords.map((word, i) => (
-            <span key={word} className="block overflow-hidden">
-              <motion.span
-                className="block"
-                initial={{ y: '110%' }}
-                animate={{ y: 0 }}
-                transition={{ duration: 0.85, delay: 0.1 + i * 0.09, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {word}
-                {i === nameWords.length - 1 && <span className="text-primary">.</span>}
-              </motion.span>
-            </span>
-          ))}
-        </h1>
-
-        {/* bottom meta row */}
+      <section className="container grid min-h-[calc(100vh-5rem)] items-center gap-8 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12">
+        {/* 3D portrait — above the name on mobile, to the right on desktop */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="grid grid-cols-2 gap-6 border-t border-line pt-6 sm:grid-cols-4 sm:items-end"
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.25, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="order-1 h-[300px] sm:h-[380px] lg:order-2 lg:h-[560px]"
         >
-          {experience[0] && (
+          <Suspense fallback={<div className="h-full w-full rounded-2xl bg-canvas" />}>
+            <PortraitScene photo={profile.photo} />
+          </Suspense>
+        </motion.div>
+
+        {/* Text column */}
+        <div className="order-2 flex flex-col justify-center gap-8 lg:order-1">
+          {/* top meta */}
+          <div className="flex items-start justify-between gap-6">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="eyebrow max-w-[16rem] leading-relaxed"
+            >
+              {site.title} — based in {profile.location}
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="eyebrow text-right leading-relaxed"
+            >
+              Portfolio
+              <br />© {new Date().getFullYear()}
+            </motion.p>
+          </div>
+
+          {/* giant name */}
+          <h1 className="display-hero text-[clamp(2.5rem,9vw,6.5rem)] text-ink">
+            {nameWords.map((word, i) => (
+              <span key={word} className="block overflow-hidden">
+                <motion.span
+                  className="block"
+                  initial={{ y: '110%' }}
+                  animate={{ y: 0 }}
+                  transition={{ duration: 0.85, delay: 0.1 + i * 0.09, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {word}
+                  {i === nameWords.length - 1 && <span className="text-primary">.</span>}
+                </motion.span>
+              </span>
+            ))}
+          </h1>
+
+          {/* bottom meta */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="grid grid-cols-2 gap-6 border-t border-line pt-6"
+          >
+            {experience[0] && (
+              <div>
+                <p className="eyebrow">Latest</p>
+                <p className="mt-1.5 text-ink">
+                  {experience[0].role} · {experience[0].org}
+                </p>
+              </div>
+            )}
             <div>
-              <p className="eyebrow">Latest</p>
-              <p className="mt-1.5 text-ink">
-                {experience[0].role} · {experience[0].org}
+              <p className="eyebrow">Education</p>
+              <p className="mt-1.5 text-ink">CGPA {profile.cgpa} · B.Tech CSE</p>
+            </div>
+            <div>
+              <p className="eyebrow">Open to</p>
+              <p className="mt-1.5 flex items-center gap-2 text-ink">
+                <span className="h-2 w-2 shrink-0 rounded-full bg-success" /> {site.available}
               </p>
             </div>
-          )}
-          <div>
-            <p className="eyebrow">Education</p>
-            <p className="mt-1.5 text-ink">CGPA {profile.cgpa} · B.Tech CSE</p>
-          </div>
-          <div>
-            <p className="eyebrow">Open to</p>
-            <p className="mt-1.5 flex items-center gap-2 text-ink">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-success" /> {site.available}
-            </p>
-          </div>
-          <Link
-            to="/projects"
-            className="link-underline flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.16em] text-ink sm:justify-end"
-          >
-            View work <ArrowDownRight size={14} />
-          </Link>
-        </motion.div>
+            <Link
+              to="/projects"
+              className="link-underline flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.16em] text-ink"
+            >
+              View work <ArrowDownRight size={14} />
+            </Link>
+          </motion.div>
+        </div>
       </section>
 
       {/* Marquee strip */}

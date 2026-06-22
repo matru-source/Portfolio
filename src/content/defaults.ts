@@ -34,6 +34,7 @@ export const defaultContent: SiteContent = {
     githubHandle: profile.githubHandle,
     linkedin: profile.linkedin,
     resumeUrl: profile.resumeUrl,
+    photo: profile.photo,
     degree: profile.degree,
     college: profile.college,
     cgpa: profile.cgpa,

@@ -24,6 +24,8 @@ export const profile = {
   githubHandle: 'matru-source',
   linkedin: '', // TODO: paste linkedin.com/in/... URL when available
   resumeUrl: '', // upload a PDF from the admin (Profile → Résumé); button hides while empty
+  // Hero portrait — save your photo as public/profile.jpg, or upload via admin (Profile → Profile photo).
+  photo: '/profile.jpg',
 
   // Education
   degree: 'B.Tech in Computer Science & Engineering',

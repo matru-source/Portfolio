@@ -40,6 +40,7 @@ const profileFields: FieldDef[] = [
   { key: 'positioning', label: 'Positioning', type: 'text' },
   { key: 'tagline', label: 'Tagline', type: 'text' },
   { key: 'summary', label: 'Summary', type: 'textarea', full: true },
+  { key: 'photo', label: 'Profile photo (hero portrait)', type: 'image', full: true },
   { key: 'roles', label: 'Roles (one per line)', type: 'stringList', full: true },
   { key: 'email', label: 'Email', type: 'text' },
   { key: 'phone', label: 'Phone', type: 'text' },

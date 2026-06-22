@@ -23,6 +23,7 @@ export interface ProfileContent {
   githubHandle: string
   linkedin: string
   resumeUrl: string
+  photo: string
   degree: string
   college: string
   cgpa: string
