@@ -1,0 +1,16 @@
+/* Matru Panda — design tokens (warm editorial). Mirrors tailwind.config.js. */
+:root {
+  --ink: #1a1714;
+  --body: #57514a;
+  --muted: #6e6557;
+  --line: #e6e0d4;
+  --canvas: #f1ece2;
+  --surface: #faf7f1;
+
+  --primary: #b4592f;
+  --primary-600: #9a4a26;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  color-scheme: light;
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#FAF7F1"/>
+  <circle cx="1090" cy="110" r="240" fill="#B4592F" fill-opacity="0.08"/>
+  <text x="82" y="120" font-family="'JetBrains Mono', monospace" font-size="22" letter-spacing="5" fill="#6E6557">PORTFOLIO · 2026</text>
+  <rect x="82" y="150" width="58" height="6" rx="3" fill="#B4592F"/>
+  <text x="78" y="320" font-family="'Space Grotesk', Arial, sans-serif" font-size="94" font-weight="700" fill="#1A1714" letter-spacing="-3">MATRU PRASAD</text>
+  <text x="78" y="420" font-family="'Space Grotesk', Arial, sans-serif" font-size="94" font-weight="700" fill="#1A1714" letter-spacing="-3">PANDA<tspan fill="#B4592F">.</tspan></text>
+  <text x="82" y="500" font-family="'Space Grotesk', Arial, sans-serif" font-size="42" font-weight="600" fill="#B4592F">Data Analyst</text>
+  <text x="82" y="556" font-family="Arial, sans-serif" font-size="27" fill="#57514A">SQL · Power BI · Excel · Python · Business Intelligence</text>
+</svg>
