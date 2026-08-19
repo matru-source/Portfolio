@@ -72,7 +72,6 @@ export function Footer() {
           <span>
             © {year} {profile.name}
           </span>
-          <span className="font-mono">Built with React · Three.js · Tailwind</span>
         </div>
       </div>
     </footer>

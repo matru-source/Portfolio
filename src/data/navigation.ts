@@ -17,6 +17,16 @@ export const socials: SocialLink[] = [
   // LinkedIn is appended at runtime only if a URL is set (see helper below).
 ]
 
+function normalizeUrl(url?: string): string {
+  if (!url) return ''
+  const trimmed = url.trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('mailto:')) {
+    return trimmed
+  }
+  return `https://${trimmed}`
+}
+
 /** Socials including LinkedIn when its URL is present. */
 export function getSocials(): SocialLink[] {
   return buildSocials(profile)
@@ -25,9 +35,11 @@ export function getSocials(): SocialLink[] {
 /** Build socials from any profile-like object (used with live/admin content). */
 export function buildSocials(p: { github: string; email: string; linkedin?: string }): SocialLink[] {
   const list: SocialLink[] = [
-    { label: 'GitHub', href: p.github, icon: 'Github' },
+    { label: 'GitHub', href: normalizeUrl(p.github), icon: 'Github' },
     { label: 'Email', href: `mailto:${p.email}`, icon: 'Mail' },
   ]
-  if (p.linkedin) list.splice(1, 0, { label: 'LinkedIn', href: p.linkedin, icon: 'Linkedin' })
+  if (p.linkedin) {
+    list.splice(1, 0, { label: 'LinkedIn', href: normalizeUrl(p.linkedin), icon: 'Linkedin' })
+  }
   return list
 }
