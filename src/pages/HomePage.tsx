@@ -2,7 +2,7 @@ import { Suspense, lazy } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
-import { Section, SectionHeading, Reveal } from '@/components/ui'
+import { Section, SectionHeading, Reveal, Stat } from '@/components/ui'
 import { useContent } from '@/content'
 
 const HeroScene = lazy(() => import('@/three/HeroScene').then((m) => ({ default: m.HeroScene })))
@@ -188,12 +188,7 @@ export function HomePage() {
       <Section>
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-4">
           {stats.map((s) => (
-            <div key={s.label} className="bg-surface p-6 sm:p-8">
-              <div className="font-display text-4xl font-medium text-ink sm:text-5xl">{s.value}</div>
-              <div className="mt-2 font-mono text-xs uppercase tracking-wider text-muted">
-                {s.label}
-              </div>
-            </div>
+            <Stat key={s.label} value={s.value} label={s.label} className="bg-surface p-6 sm:p-8" />
           ))}
         </div>
       </Section>

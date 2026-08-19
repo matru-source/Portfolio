@@ -39,14 +39,15 @@ export function PortraitScene({
       t += 0.016
       let display: number
       if (hovered.current && !reduced) {
-        rotY.current += 2.4 // spin while hovered
+        // Calm settling when hovered (no spinning)
+        rotY.current += (0 - rotY.current) * 0.1
         display = rotY.current
       } else {
-        const base = Math.round(rotY.current / 360) * 360 // settle to nearest front
+        const base = 0
         rotY.current += (base - rotY.current) * 0.08
-        display = rotY.current + (reduced ? 0 : Math.sin(t * 0.8) * 5) // gentle sway
+        display = rotY.current + (reduced ? 0 : Math.sin(t * 0.8) * 3) // subtle gentle sway
       }
-      const floatY = reduced ? 0 : Math.sin(t * 0.9) * 8
+      const floatY = reduced ? 0 : Math.sin(t * 0.9) * 6
       if (cardRef.current) {
         cardRef.current.style.transform = `translateY(${floatY}px) rotateY(${display}deg)`
       }

@@ -2,12 +2,14 @@ import { Outlet } from 'react-router-dom'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
 import { ScrollToTop } from './ScrollToTop'
+import { SmoothScroll } from './SmoothScroll'
 import { RouteMeta } from './RouteMeta'
 
 /** App shell — sticky nav, routed page content, footer. */
 export function Layout() {
   return (
     <>
+      <SmoothScroll />
       <ScrollToTop />
       <RouteMeta />
       {/* Skip link for keyboard users */}

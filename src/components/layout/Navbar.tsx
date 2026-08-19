@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion'
 import { ArrowUpRight, Menu, X } from 'lucide-react'
 import { navItems } from '@/data'
 import { useContent } from '@/content'
@@ -15,6 +15,13 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 export function Navbar() {
   const { profile } = useContent()
   const [open, setOpen] = useState(false)
+
+  const { scrollYProgress } = useScroll()
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 120,
+    damping: 30,
+    restDelta: 0.001,
+  })
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-surface/80 backdrop-blur-md">
@@ -104,6 +111,12 @@ export function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modern Scroll Progress Indicator */}
+      <motion.div
+        className="absolute bottom-0 left-0 right-0 h-[2px] origin-left bg-gradient-to-r from-primary via-accent to-primary"
+        style={{ scaleX }}
+      />
     </header>
   )
 }
