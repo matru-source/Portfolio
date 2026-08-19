@@ -1,10 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowUpRight, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { GalleryImage } from './GalleryImage'
+import { cn } from '@/lib/cn'
 
 export interface LightboxItem {
   image?: string
+  images?: string[]
   title: string
   subtitle?: string
   caption?: string
@@ -18,11 +20,29 @@ interface LightboxProps {
   onNavigate: (index: number) => void
 }
 
-/** Accessible modal image viewer with keyboard + arrow navigation. */
+/** Accessible modal image viewer with keyboard + arrow navigation & multi-photo support. */
 export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
   const open = index !== null
   const current = open ? items[index] : null
   const many = items.length > 1
+
+  const currentImages = useMemo(() => {
+    if (!current) return []
+    const list: string[] = []
+    if (current.image) list.push(current.image)
+    if (Array.isArray(current.images)) {
+      current.images.forEach((img) => {
+        if (img && !list.includes(img)) list.push(img)
+      })
+    }
+    return list
+  }, [current])
+
+  const [subIdx, setSubIdx] = useState(0)
+
+  useEffect(() => {
+    setSubIdx(0)
+  }, [index])
 
   const go = (delta: number) => {
     if (index === null) return
@@ -52,6 +72,8 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, index, items.length])
 
+  const activeSrc = currentImages[subIdx] || current?.image
+
   return (
     <AnimatePresence>
       {open && current && (
@@ -77,13 +99,13 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
             <X size={22} />
           </button>
 
-          {/* Prev / Next */}
+          {/* Prev / Next item */}
           {many && (
             <>
               <button
                 type="button"
                 onClick={() => go(-1)}
-                aria-label="Previous"
+                aria-label="Previous item"
                 className="absolute left-3 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-surface/10 text-surface transition-colors hover:bg-surface/20 sm:left-6"
               >
                 <ChevronLeft size={24} />
@@ -91,7 +113,7 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
               <button
                 type="button"
                 onClick={() => go(1)}
-                aria-label="Next"
+                aria-label="Next item"
                 className="absolute right-3 top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-surface/10 text-surface transition-colors hover:bg-surface/20 sm:right-6"
               >
                 <ChevronRight size={24} />
@@ -101,15 +123,15 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
 
           {/* Image */}
           <motion.div
-            key={index}
+            key={`${index}-${subIdx}`}
             initial={{ scale: 0.97, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-[1] h-[68vh] w-full max-w-3xl"
+            className="relative z-[1] h-[60vh] w-full max-w-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             <GalleryImage
-              src={current.image}
+              src={activeSrc}
               alt={current.title}
               label={current.title}
               className="h-full w-full rounded-xl"
@@ -117,15 +139,44 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
             />
           </motion.div>
 
+          {/* Sub-thumbnails if multiple photos */}
+          {currentImages.length > 1 && (
+            <div className="relative z-[1] mt-3 flex items-center justify-center gap-2 overflow-x-auto p-1">
+              {currentImages.map((imgUrl, i) => (
+                <button
+                  key={imgUrl + i}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSubIdx(i)
+                  }}
+                  className={cn(
+                    'h-12 w-16 overflow-hidden rounded-lg border-2 transition-all',
+                    i === subIdx
+                      ? 'border-primary shadow-md scale-105 opacity-100'
+                      : 'border-white/20 opacity-60 hover:opacity-90',
+                  )}
+                >
+                  <img src={imgUrl} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Caption */}
-          <div className="relative z-[1] mt-5 max-w-xl text-center text-surface">
+          <div className="relative z-[1] mt-4 max-w-xl text-center text-surface">
             <p className="font-display text-lg font-medium">{current.title}</p>
             {current.subtitle && <p className="mt-1 text-sm text-surface/70">{current.subtitle}</p>}
             {current.caption && <p className="mt-1 text-sm text-surface/60">{current.caption}</p>}
-            <div className="mt-3 flex items-center justify-center gap-4">
+            <div className="mt-2.5 flex items-center justify-center gap-4">
               {many && (
                 <span className="font-mono text-xs text-surface/50">
-                  {(index ?? 0) + 1} / {items.length}
+                  Item {(index ?? 0) + 1} / {items.length}
+                </span>
+              )}
+              {currentImages.length > 1 && (
+                <span className="font-mono text-xs text-primary">
+                  Photo {subIdx + 1} of {currentImages.length}
                 </span>
               )}
               {current.file && (

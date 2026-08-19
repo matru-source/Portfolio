@@ -8,6 +8,7 @@ export interface GalleryItem {
   caption?: string
   date?: string
   image?: string
+  images?: string[]
   tags?: string[]
 }
 

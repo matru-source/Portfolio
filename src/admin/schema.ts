@@ -8,6 +8,7 @@ export type FieldType =
   | 'select'
   | 'stringList'
   | 'image'
+  | 'images'
   | 'file'
   | 'sublist'
 
@@ -171,12 +172,13 @@ export const SECTIONS: SectionDef[] = [
     label: 'Achievements (gallery)',
     kind: 'list',
     labelKey: 'title',
-    newItem: () => ({ key: uid(), title: 'New achievement', caption: '', date: '', image: '', tags: [] }),
+    newItem: () => ({ key: uid(), title: 'New achievement', caption: '', date: '', image: '', images: [], tags: [] }),
     fields: [
       { key: 'title', label: 'Title', type: 'text' },
       { key: 'date', label: 'Date', type: 'text' },
       { key: 'caption', label: 'Caption', type: 'textarea', full: true },
-      { key: 'image', label: 'Photo', type: 'image', full: true },
+      { key: 'image', label: 'Cover Photo (Primary)', type: 'image', full: true },
+      { key: 'images', label: 'Multiple Photos (Auto-slideshow in 2s)', type: 'images', full: true },
       { key: 'tags', label: 'Tags (one per line)', type: 'stringList' },
       { key: 'key', label: 'ID', type: 'text' },
     ],
@@ -186,12 +188,13 @@ export const SECTIONS: SectionDef[] = [
     label: 'Events (gallery)',
     kind: 'list',
     labelKey: 'title',
-    newItem: () => ({ key: uid(), title: 'New event', caption: '', date: '', image: '', tags: [] }),
+    newItem: () => ({ key: uid(), title: 'New event', caption: '', date: '', image: '', images: [], tags: [] }),
     fields: [
       { key: 'title', label: 'Title', type: 'text' },
       { key: 'date', label: 'Date', type: 'text' },
       { key: 'caption', label: 'Caption', type: 'textarea', full: true },
-      { key: 'image', label: 'Photo', type: 'image', full: true },
+      { key: 'image', label: 'Cover Photo (Primary)', type: 'image', full: true },
+      { key: 'images', label: 'Multiple Photos (Auto-slideshow in 2s)', type: 'images', full: true },
       { key: 'tags', label: 'Tags (one per line)', type: 'stringList' },
       { key: 'key', label: 'ID', type: 'text' },
     ],

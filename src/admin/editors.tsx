@@ -85,6 +85,170 @@ function ImageField({ value, onChange }: { value: unknown; onChange: (v: unknown
   )
 }
 
+/** Multi-image uploader — upload multiple photos at once, add via URL, reorder, delete. */
+function MultiImageField({
+  value,
+  onChange,
+}: {
+  value: unknown
+  onChange: (v: unknown) => void
+}) {
+  const images = Array.isArray(value)
+    ? (value.filter((x): x is string => typeof x === 'string' && Boolean(x)))
+    : []
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const [newUrl, setNewUrl] = useState('')
+
+  const onFiles = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length) return
+    if (!supabase) {
+      setErr('Supabase is not configured.')
+      return
+    }
+    setBusy(true)
+    setErr(null)
+    const uploadedUrls: string[] = []
+    try {
+      for (const file of files) {
+        const safe = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')
+        const path = `gallery/${Date.now()}-${safe}`
+        const { error } = await supabase.storage
+          .from(MEDIA_BUCKET)
+          .upload(path, file, { upsert: true, cacheControl: '3600' })
+        if (error) throw error
+        const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path)
+        uploadedUrls.push(data.publicUrl)
+      }
+      onChange([...images, ...uploadedUrls])
+    } catch (e2) {
+      const msg = e2 instanceof Error ? e2.message : String(e2)
+      setErr(
+        msg.toLowerCase().includes('fetch')
+          ? 'Upload blocked. Check Supabase schema & storage bucket.'
+          : msg,
+      )
+    } finally {
+      setBusy(false)
+      e.target.value = ''
+    }
+  }
+
+  const addUrl = () => {
+    if (!newUrl.trim()) return
+    onChange([...images, newUrl.trim()])
+    setNewUrl('')
+  }
+
+  const removeImg = (idx: number) => {
+    onChange(images.filter((_, i) => i !== idx))
+  }
+
+  const move = (from: number, to: number) => {
+    if (to < 0 || to >= images.length) return
+    const copy = [...images]
+    const [item] = copy.splice(from, 1)
+    copy.splice(to, 0, item)
+    onChange(copy)
+  }
+
+  return (
+    <div className="space-y-3 rounded-lg border border-line bg-canvas/60 p-3.5">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink hover:border-primary">
+          <Upload size={15} /> {busy ? 'Uploading…' : 'Upload photos (multi-select)'}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={onFiles}
+            disabled={busy}
+          />
+        </label>
+        <div className="flex min-w-[240px] flex-1 items-center gap-2">
+          <input
+            type="text"
+            value={newUrl}
+            onChange={(e) => setNewUrl(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addUrl()
+              }
+            }}
+            placeholder="…or paste image URL and press Enter"
+            className={inputClass}
+          />
+          <button
+            type="button"
+            onClick={addUrl}
+            disabled={!newUrl.trim()}
+            className="rounded-lg border border-line bg-white px-3 py-2 text-xs font-medium text-ink hover:border-primary disabled:opacity-50"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+
+      {err && <p className="text-xs text-danger">{err}</p>}
+
+      {images.length > 0 ? (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+          {images.map((url, i) => (
+            <div
+              key={url + i}
+              className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-line bg-surface"
+            >
+              <img src={url} alt="" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 flex items-center justify-between bg-ink/50 p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="flex gap-1">
+                  {i > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => move(i, i - 1)}
+                      className="rounded bg-surface/90 px-1.5 py-0.5 text-[10px] font-bold text-ink hover:bg-surface"
+                      title="Move left"
+                    >
+                      ←
+                    </button>
+                  )}
+                  {i < images.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={() => move(i, i + 1)}
+                      className="rounded bg-surface/90 px-1.5 py-0.5 text-[10px] font-bold text-ink hover:bg-surface"
+                      title="Move right"
+                    >
+                      →
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeImg(i)}
+                  className="rounded bg-danger p-1 text-white hover:opacity-90"
+                  title="Remove image"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+              <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 font-mono text-[9px] text-white">
+                #{i + 1}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-muted">
+          No extra photos added yet. Upload or paste multiple images to cycle automatically every 2s.
+        </p>
+      )}
+    </div>
+  )
+}
+
 /** File field — upload a PDF (e.g. résumé) to Supabase Storage, or paste a URL. */
 function FileField({ value, onChange }: { value: unknown; onChange: (v: unknown) => void }) {
   const url = typeof value === 'string' ? value : ''
@@ -238,6 +402,8 @@ function Field({
       )
     case 'image':
       return <ImageField value={value} onChange={onChange} />
+    case 'images':
+      return <MultiImageField value={value} onChange={onChange} />
     case 'file':
       return <FileField value={value} onChange={onChange} />
     default:
