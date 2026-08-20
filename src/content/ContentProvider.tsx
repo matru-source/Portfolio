@@ -4,18 +4,57 @@ import { CONTENT_ID, CONTENT_TABLE } from '@/admin/config'
 import { defaultContent } from './defaults'
 import type { SiteContent } from './types'
 
+function isPlaceholder(url?: string | null): boolean {
+  if (!url) return true
+  return (
+    url.startsWith('/certificates/') ||
+    url.startsWith('/gallery/') ||
+    url === '/profile.jpg' ||
+    url.trim() === ''
+  )
+}
+
+function mergeItems<T extends { key?: string; image?: string; images?: string[] }>(
+  baseList: T[],
+  overrideList?: T[],
+): T[] {
+  if (!overrideList) return baseList
+  return overrideList.map((item) => {
+    const baseMatch = baseList.find((b) => b.key === item.key)
+    if (!baseMatch) return item
+    const next = { ...item }
+    if (isPlaceholder(item.image) && baseMatch.image && !isPlaceholder(baseMatch.image)) {
+      next.image = baseMatch.image
+    }
+    if ((!item.images || item.images.length === 0) && baseMatch.images && baseMatch.images.length > 0) {
+      next.images = baseMatch.images
+    }
+    return next
+  })
+}
+
 function merge(base: SiteContent, override: Partial<SiteContent> | null | undefined): SiteContent {
   if (!override) return base
   return {
-    profile: { ...base.profile, ...(override.profile ?? {}) },
+    profile: {
+      ...base.profile,
+      ...(override.profile ?? {}),
+      photo: isPlaceholder(override.profile?.photo)
+        ? base.profile.photo
+        : override.profile?.photo || base.profile.photo,
+      photos:
+        override.profile?.photos && override.profile.photos.length > 0
+          ? override.profile.photos
+          : base.profile.photos,
+    },
     site: { ...base.site, ...(override.site ?? {}) },
-    projects: override.projects ?? base.projects,
+    projects: mergeItems(base.projects, override.projects),
     skills: override.skills ?? base.skills,
     experience: override.experience ?? base.experience,
-    certifications: override.certifications ?? base.certifications,
+    certifications: mergeItems(base.certifications, override.certifications),
     achievements: override.achievements ?? base.achievements,
-    achievementsGallery: override.achievementsGallery ?? base.achievementsGallery,
-    events: override.events ?? base.events,
+    achievementsGallery: mergeItems(base.achievementsGallery, override.achievementsGallery),
+    events: mergeItems(base.events, override.events),
     leadership: override.leadership ?? base.leadership,
     research: override.research ?? base.research,
     timeline: override.timeline ?? base.timeline,

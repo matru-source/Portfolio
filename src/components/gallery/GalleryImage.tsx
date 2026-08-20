@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ImageOff } from 'lucide-react'
+import { FileText, ImageOff } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 interface GalleryImageProps {
@@ -11,9 +11,15 @@ interface GalleryImageProps {
   imgClassName?: string
 }
 
+function isPdf(url?: string): boolean {
+  if (!url) return false
+  const clean = url.split('?')[0].toLowerCase()
+  return clean.endsWith('.pdf')
+}
+
 /**
- * Renders an image, or a clean branded placeholder when the image is missing or
- * fails to load — so the gallery looks intentional before real photos are added.
+ * Renders an image, or a styled PDF document preview, or a clean branded placeholder
+ * when the source is missing or fails to load.
  */
 export function GalleryImage({ src, alt, label, className, imgClassName }: GalleryImageProps) {
   const [failed, setFailed] = useState(false)
@@ -25,16 +31,38 @@ export function GalleryImage({ src, alt, label, className, imgClassName }: Galle
     return (
       <div
         className={cn(
-          'flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary-50 to-canvas',
+          'flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary-50 to-canvas p-4 text-center',
           className,
         )}
       >
         <ImageOff size={22} className="text-primary/50" />
         {label && (
-          <span className="max-w-[80%] text-center font-mono text-[10px] uppercase tracking-wider text-muted">
+          <span className="max-w-[80%] font-mono text-[10px] uppercase tracking-wider text-muted">
             {label}
           </span>
         )}
+      </div>
+    )
+  }
+
+  if (isPdf(src)) {
+    const fileName = decodeURIComponent(src.split('/').pop()?.replace(/\.pdf$/i, '') || 'Document')
+    return (
+      <div
+        className={cn(
+          'flex h-full w-full flex-col items-center justify-center gap-2.5 bg-gradient-to-br from-rose-50/80 via-canvas to-primary-50/40 p-5 text-center',
+          className,
+        )}
+      >
+        <div className="grid h-12 w-12 place-items-center rounded-xl bg-rose-500/10 text-rose-600 shadow-sm">
+          <FileText size={26} />
+        </div>
+        <span className="rounded-full bg-rose-100 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-rose-700">
+          PDF Document
+        </span>
+        <p className="line-clamp-2 max-w-[90%] font-display text-xs font-semibold text-ink">
+          {alt || fileName}
+        </p>
       </div>
     )
   }
