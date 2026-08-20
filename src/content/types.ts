@@ -24,6 +24,7 @@ export interface ProfileContent {
   linkedin: string
   resumeUrl: string
   photo: string
+  photos?: string[]
   degree: string
   college: string
   cgpa: string

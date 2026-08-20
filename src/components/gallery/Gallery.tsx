@@ -88,7 +88,7 @@ function GalleryCardItem({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35, ease: 'easeInOut' }}
-            className="h-full w-full"
+            className="absolute inset-0 h-full w-full"
           >
             <GalleryImage
               src={currentSrc}

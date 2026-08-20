@@ -11,6 +11,8 @@ export interface Certification {
   category: 'Data & Analytics' | 'Cybersecurity' | 'Development' | 'NCC'
   /** Certificate image under /public. */
   image?: string
+  /** Additional certificate images / marksheets (slideshow / lightbox). */
+  images?: string[]
   /** Optional PDF version. */
   file?: string
   /** Optional online verification URL. */

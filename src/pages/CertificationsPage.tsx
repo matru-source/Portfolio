@@ -13,6 +13,7 @@ const CATEGORY_ORDER: Certification['category'][] = [
 function toEntries(list: Certification[]): GalleryEntry[] {
   return list.map((c) => ({
     image: c.image,
+    images: c.images,
     file: c.file,
     title: c.title,
     subtitle: c.year ? `${c.issuer} · ${c.year}` : c.issuer,

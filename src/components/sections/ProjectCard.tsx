@@ -1,34 +1,114 @@
-import { ArrowUpRight, Check } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowUpRight, Check, Layers } from 'lucide-react'
 import { Badge, Card } from '@/components/ui'
 import { GalleryImage } from '@/components/gallery'
+import { cn } from '@/lib/cn'
 import type { Project } from '@/data'
 
 export function ProjectCard({ project }: { project: Project }) {
+  const images = useMemo(() => {
+    const list: string[] = []
+    if (project.image) list.push(project.image)
+    if (Array.isArray(project.images)) {
+      project.images.forEach((img) => {
+        if (img && !list.includes(img)) list.push(img)
+      })
+    }
+    return list
+  }, [project.image, project.images])
+
+  const [activeIdx, setActiveIdx] = useState(0)
+  const [hovered, setHovered] = useState(false)
+  const hasMultiple = images.length > 1
+
+  useEffect(() => {
+    if (!hasMultiple || hovered) return
+    const interval = setInterval(() => {
+      setActiveIdx((prev) => (prev + 1) % images.length)
+    }, 2500)
+    return () => clearInterval(interval)
+  }, [hasMultiple, hovered, images.length])
+
+  const currentSrc = images[activeIdx] || project.image
+
   return (
     <Card hover className="flex h-full flex-col overflow-hidden p-6 sm:p-8">
-      {/* Optional screenshot (links to the live project if set) */}
-      {project.image &&
-        (project.liveUrl ? (
-          <a
-            href={project.liveUrl}
-            target="_blank"
-            rel="noreferrer noopener"
-            aria-label={`Visit ${project.name}`}
-            className="group/img mb-6 block aspect-[16/9] overflow-hidden rounded-xl border border-line"
-          >
-            <GalleryImage
-              src={project.image}
-              alt={project.name}
-              label={project.name}
-              className="h-full w-full"
-              imgClassName="transition-transform duration-500 group-hover/img:scale-[1.04]"
-            />
-          </a>
-        ) : (
-          <div className="mb-6 aspect-[16/9] overflow-hidden rounded-xl border border-line">
-            <GalleryImage src={project.image} alt={project.name} label={project.name} className="h-full w-full" />
-          </div>
-        ))}
+      {/* Screenshot / Slideshow */}
+      {images.length > 0 && (
+        <div
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          className="relative mb-6 aspect-[16/9] overflow-hidden rounded-xl border border-line bg-canvas"
+        >
+          {project.liveUrl ? (
+            <a
+              href={project.liveUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label={`Visit ${project.name}`}
+              className="group/img block h-full w-full"
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentSrc}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.35 }}
+                  className="absolute inset-0 h-full w-full"
+                >
+                  <GalleryImage
+                    src={currentSrc}
+                    alt={project.name}
+                    label={project.name}
+                    className="h-full w-full"
+                    imgClassName="transition-transform duration-500 group-hover/img:scale-[1.04]"
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </a>
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentSrc}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35 }}
+                className="absolute inset-0 h-full w-full"
+              >
+                <GalleryImage
+                  src={currentSrc}
+                  alt={project.name}
+                  label={project.name}
+                  className="h-full w-full"
+                />
+              </motion.div>
+            </AnimatePresence>
+          )}
+
+          {hasMultiple && (
+            <div className="absolute bottom-2.5 right-2.5 z-10 flex items-center gap-1.5 rounded-full bg-ink/80 px-2.5 py-1 backdrop-blur-sm shadow-sm">
+              <Layers size={11} className="text-white/80" />
+              <span className="font-mono text-[10px] font-medium text-white/95">
+                {activeIdx + 1}/{images.length}
+              </span>
+              <div className="ml-1 flex gap-1">
+                {images.map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={cn(
+                      'h-1.5 rounded-full transition-all duration-300',
+                      idx === activeIdx ? 'w-3 bg-white' : 'w-1.5 bg-white/40',
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-3">
         <Badge tone="primary">{project.domain}</Badge>

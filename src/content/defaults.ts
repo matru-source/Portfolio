@@ -35,6 +35,7 @@ export const defaultContent: SiteContent = {
     linkedin: profile.linkedin,
     resumeUrl: profile.resumeUrl,
     photo: profile.photo,
+    photos: [...((profile as { photos?: string[] }).photos ?? [])],
     degree: profile.degree,
     college: profile.college,
     cgpa: profile.cgpa,

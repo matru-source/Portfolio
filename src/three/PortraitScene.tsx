@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { usePrefersReducedMotion } from '@/hooks'
 import { cn } from '@/lib/cn'
 
@@ -9,6 +10,7 @@ function initialsOf(name: string) {
 
 interface PortraitSceneProps {
   photo: string
+  photos?: string[]
   name?: string
   caption?: string
   className?: string
@@ -16,10 +18,11 @@ interface PortraitSceneProps {
 
 /**
  * Interactive 3D portrait card (CSS 3D — uses a normal <img>, so any photo
- * loads without WebGL/CORS issues). Floats and gently sways; spins on hover.
+ * loads without WebGL/CORS issues). Floats and gently sways; supports multi-photo cycling.
  */
 export function PortraitScene({
   photo,
+  photos,
   name = 'Matru Panda',
   caption = 'Data Analyst',
   className,
@@ -29,8 +32,33 @@ export function PortraitScene({
   const hovered = useRef(false)
   const rotY = useRef(0)
   const [failed, setFailed] = useState(false)
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0)
 
-  useEffect(() => setFailed(false), [photo])
+  const allPhotos = useMemo(() => {
+    const list: string[] = []
+    if (photo) list.push(photo)
+    if (Array.isArray(photos)) {
+      photos.forEach((p) => {
+        if (p && !list.includes(p)) list.push(p)
+      })
+    }
+    return list
+  }, [photo, photos])
+
+  const hasMultiple = allPhotos.length > 1
+
+  // Auto-cycle profile photos every 3s if multiple photos provided
+  useEffect(() => {
+    if (!hasMultiple) return
+    const interval = setInterval(() => {
+      if (!hovered.current) {
+        setActivePhotoIdx((prev) => (prev + 1) % allPhotos.length)
+      }
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [hasMultiple, allPhotos.length])
+
+  useEffect(() => setFailed(false), [photo, activePhotoIdx])
 
   useEffect(() => {
     let raf = 0
@@ -58,7 +86,8 @@ export function PortraitScene({
   }, [reduced])
 
   const initials = initialsOf(name)
-  const showPhoto = Boolean(photo) && !failed
+  const currentPhoto = allPhotos[activePhotoIdx] || photo
+  const showPhoto = Boolean(currentPhoto) && !failed
 
   return (
     <div
@@ -76,19 +105,42 @@ export function PortraitScene({
         {/* Front — the photo */}
         <div className="absolute inset-0 overflow-hidden rounded-2xl border border-line bg-surface shadow-card [backface-visibility:hidden]">
           {showPhoto ? (
-            <img
-              src={photo}
-              alt={name}
-              draggable={false}
-              onError={() => setFailed(true)}
-              className="h-full w-full object-cover"
-            />
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentPhoto}
+                src={currentPhoto}
+                alt={name}
+                draggable={false}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                onError={() => setFailed(true)}
+                className="h-full w-full object-cover"
+              />
+            </AnimatePresence>
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-50 to-canvas">
               <span className="font-display text-5xl font-bold text-primary/40">{initials}</span>
             </div>
           )}
-          <div className="absolute inset-x-0 bottom-0 bg-primary py-2 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-surface">
+
+          {/* Mini multiple photos dots indicator */}
+          {hasMultiple && (
+            <div className="absolute right-3 top-3 z-10 flex gap-1 rounded-full bg-ink/75 px-2 py-1 backdrop-blur-sm shadow-sm">
+              {allPhotos.map((_, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    'h-1.5 rounded-full transition-all duration-300',
+                    i === activePhotoIdx ? 'w-3 bg-white' : 'w-1.5 bg-white/40',
+                  )}
+                />
+              ))}
+            </div>
+          )}
+
+          <div className="absolute inset-x-0 bottom-0 z-10 bg-primary py-2 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-surface">
             {caption}
           </div>
         </div>

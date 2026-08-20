@@ -16,6 +16,8 @@ export interface Project {
   featured?: boolean
   /** Optional dashboard screenshot (path under /public or an uploaded URL). */
   image?: string
+  /** Additional dashboard / project screenshots (auto-slideshow). */
+  images?: string[]
   /** Optional live link — opens the dashboard/report/repo in a new tab. */
   liveUrl?: string
 }
