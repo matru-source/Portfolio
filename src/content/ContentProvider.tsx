@@ -5,12 +5,11 @@ import { defaultContent } from './defaults'
 import type { SiteContent } from './types'
 
 function isPlaceholder(url?: string | null): boolean {
-  if (!url) return true
+  if (!url) return false
   return (
     url.startsWith('/certificates/') ||
     url.startsWith('/gallery/') ||
-    url === '/profile.jpg' ||
-    url.trim() === ''
+    url === '/profile.jpg'
   )
 }
 
@@ -26,7 +25,7 @@ function mergeItems<T extends { key?: string; image?: string; images?: string[] 
     if (isPlaceholder(item.image) && baseMatch.image && !isPlaceholder(baseMatch.image)) {
       next.image = baseMatch.image
     }
-    if ((!item.images || item.images.length === 0) && baseMatch.images && baseMatch.images.length > 0) {
+    if (item.images === undefined && baseMatch.images && baseMatch.images.length > 0) {
       next.images = baseMatch.images
     }
     return next
@@ -39,11 +38,12 @@ function merge(base: SiteContent, override: Partial<SiteContent> | null | undefi
     profile: {
       ...base.profile,
       ...(override.profile ?? {}),
-      photo: isPlaceholder(override.profile?.photo)
-        ? base.profile.photo
-        : override.profile?.photo || base.profile.photo,
+      photo:
+        override.profile?.photo !== undefined
+          ? (isPlaceholder(override.profile.photo) ? base.profile.photo : override.profile.photo)
+          : base.profile.photo,
       photos:
-        override.profile?.photos && override.profile.photos.length > 0
+        override.profile?.photos !== undefined
           ? override.profile.photos
           : base.profile.photos,
     },

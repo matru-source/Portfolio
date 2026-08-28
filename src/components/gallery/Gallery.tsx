@@ -39,14 +39,11 @@ function GalleryCardItem({
   onOpen: () => void
 }) {
   const images = useMemo(() => {
-    const list: string[] = []
-    if (item.image) list.push(item.image)
-    if (Array.isArray(item.images)) {
-      item.images.forEach((img) => {
-        if (img && !list.includes(img)) list.push(img)
-      })
+    if (Array.isArray(item.images) && item.images.length > 0) {
+      const list = item.images.filter(Boolean)
+      if (list.length > 0) return list
     }
-    return list
+    return item.image ? [item.image] : []
   }, [item.image, item.images])
 
   const [activeIdx, setActiveIdx] = useState(0)

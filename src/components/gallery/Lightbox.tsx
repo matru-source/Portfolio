@@ -28,14 +28,11 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
 
   const currentImages = useMemo(() => {
     if (!current) return []
-    const list: string[] = []
-    if (current.image) list.push(current.image)
-    if (Array.isArray(current.images)) {
-      current.images.forEach((img) => {
-        if (img && !list.includes(img)) list.push(img)
-      })
+    if (Array.isArray(current.images) && current.images.length > 0) {
+      const list = current.images.filter(Boolean)
+      if (list.length > 0) return list
     }
-    return list
+    return current.image ? [current.image] : []
   }, [current])
 
   const [subIdx, setSubIdx] = useState(0)

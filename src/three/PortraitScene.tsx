@@ -35,14 +35,11 @@ export function PortraitScene({
   const [activePhotoIdx, setActivePhotoIdx] = useState(0)
 
   const allPhotos = useMemo(() => {
-    const list: string[] = []
-    if (photo) list.push(photo)
-    if (Array.isArray(photos)) {
-      photos.forEach((p) => {
-        if (p && !list.includes(p)) list.push(p)
-      })
+    if (Array.isArray(photos) && photos.length > 0) {
+      const list = photos.filter(Boolean)
+      if (list.length > 0) return list
     }
-    return list
+    return photo ? [photo] : []
   }, [photo, photos])
 
   const hasMultiple = allPhotos.length > 1

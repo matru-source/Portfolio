@@ -21,6 +21,7 @@ export const achievementsGallery: GalleryItem[] = [
     date: '2025',
     image: 'https://euibyfjcwqjapbnlzqbs.supabase.co/storage/v1/object/public/Media/uploads/1787173323062-1000520311.jpg',
     images: [
+      'https://euibyfjcwqjapbnlzqbs.supabase.co/storage/v1/object/public/Media/uploads/1787173323062-1000520311.jpg',
       'https://euibyfjcwqjapbnlzqbs.supabase.co/storage/v1/object/public/Media/uploads/1787176797140-1000520285.jpg'
     ],
     tags: ['Internship', 'Award'],
@@ -32,6 +33,7 @@ export const achievementsGallery: GalleryItem[] = [
     date: '2024',
     image: 'https://euibyfjcwqjapbnlzqbs.supabase.co/storage/v1/object/public/Media/uploads/1787173456503-1000454020.jpg',
     images: [
+      'https://euibyfjcwqjapbnlzqbs.supabase.co/storage/v1/object/public/Media/uploads/1787173456503-1000454020.jpg',
       'https://euibyfjcwqjapbnlzqbs.supabase.co/storage/v1/object/public/Media/uploads/1787175069409-1000207200.jpg'
     ],
     tags: ['Entrepreneurship', 'Award'],
