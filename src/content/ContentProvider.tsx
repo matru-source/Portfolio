@@ -70,13 +70,39 @@ interface ContentContextValue {
 
 const ContentContext = createContext<ContentContextValue | undefined>(undefined)
 
+const CACHE_KEY = 'matru_portfolio_content_v1'
+
+function getInitialContent(): SiteContent {
+  try {
+    const cached = typeof window !== 'undefined' ? localStorage.getItem(CACHE_KEY) : null
+    if (cached) {
+      const parsed = JSON.parse(cached)
+      if (parsed && typeof parsed === 'object') {
+        return merge(defaultContent, parsed as Partial<SiteContent>)
+      }
+    }
+  } catch {
+    // Ignore storage parse errors
+  }
+  return defaultContent
+}
+
+function cacheContent(data: SiteContent) {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+    }
+  } catch {
+    // Ignore storage quota errors
+  }
+}
+
 export function ContentProvider({ children }: { children: ReactNode }) {
-  const [content, setContent] = useState<SiteContent>(defaultContent)
+  const [content, setContent] = useState<SiteContent>(getInitialContent)
   const [loading, setLoading] = useState(true)
 
   const reload = useCallback(async () => {
     if (!supabase) {
-      setContent(defaultContent)
       setLoading(false)
       return
     }
@@ -87,12 +113,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         .eq('id', CONTENT_ID)
         .maybeSingle()
       if (!error && data && data.data) {
-        setContent(merge(defaultContent, data.data as Partial<SiteContent>))
-      } else {
-        setContent(defaultContent)
+        const merged = merge(defaultContent, data.data as Partial<SiteContent>)
+        setContent(merged)
+        cacheContent(merged)
       }
     } catch {
-      setContent(defaultContent)
+      // Keep cached content on fetch error
     } finally {
       setLoading(false)
     }
@@ -107,7 +133,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase
       .from(CONTENT_TABLE)
       .upsert({ id: CONTENT_ID, data: next, updated_at: new Date().toISOString() })
-    if (!error) setContent(next)
+    if (!error) {
+      setContent(next)
+      cacheContent(next)
+    }
     return { error: error ? error.message : null }
   }, [])
 
