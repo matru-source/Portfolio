@@ -52,12 +52,12 @@ export function HomePage() {
           {/* Layer 0: Full-Screen 300-Frame Scroll-Driven Canvas */}
           <ScrollPortrait scrollProgress={scrollProgress} className="absolute inset-0 h-full w-full z-0" />
 
-          {/* Layer 1: Foreground Editorial Content Overlay (3-Act Stationary Scroll Choreography) */}
-          <section className="container relative z-10 flex min-h-[calc(100vh-5rem)] w-full items-center py-6 pointer-events-none">
+          {/* Layer 1: Foreground Editorial Content Overlay (Responsive 3-Act Choreography) */}
+          <section className="container relative z-10 flex min-h-[calc(100vh-5rem)] w-full items-center py-4 lg:py-6 pointer-events-none">
             
-            {/* ACT 1: RIGHT COLUMN — Visible strictly at Start (0% -> ~22%) when person is on the LEFT */}
+            {/* ACT 1: Bottom-Anchored on Mobile (100% Face Clearance), Right Column on Desktop (0% -> ~22%) */}
             <div
-              className="absolute right-6 sm:right-10 lg:right-16 top-1/2 -translate-y-1/2 flex w-full max-w-[460px] lg:max-w-[540px] flex-col justify-center gap-8 py-4 pointer-events-auto transition-opacity duration-200 ease-out"
+              className="absolute inset-x-4 bottom-8 sm:bottom-12 lg:inset-x-auto lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2 lg:right-16 flex w-auto lg:w-full lg:max-w-[540px] flex-col justify-end lg:justify-center gap-3 sm:gap-4 lg:gap-8 pointer-events-auto transition-opacity duration-200 ease-out p-4 rounded-2xl lg:p-0 bg-gradient-to-t from-surface via-surface/95 to-transparent lg:bg-none backdrop-blur-[2px] lg:backdrop-blur-none border border-line/30 lg:border-none"
               style={{
                 // Fades out immediately as scroll begins (100% gone by 0.22 scroll before person reaches center)
                 opacity: Math.max(0, Math.min(1, (0.22 - scrollProgress) / 0.12)),
@@ -65,18 +65,18 @@ export function HomePage() {
               }}
             >
               {/* Top Meta Bar */}
-              <div className="flex items-start justify-between gap-4">
-                <p className="eyebrow text-xs sm:text-sm max-w-[17rem] leading-relaxed">
+              <div className="flex items-start justify-between gap-3 sm:gap-4">
+                <p className="eyebrow text-[10px] sm:text-xs lg:text-sm max-w-[12rem] sm:max-w-[17rem] leading-relaxed">
                   Full Stack Developer | Data Analyst — based in {profile.location}
                 </p>
-                <p className="eyebrow text-xs sm:text-sm text-right leading-relaxed">
-                  Portfolio
-                  <br />© {new Date().getFullYear()}
+                <p className="eyebrow text-[10px] sm:text-xs lg:text-sm text-right leading-relaxed font-mono uppercase tracking-wider">
+                  Building Apps &
+                  <br />Uncovering Insights
                 </p>
               </div>
 
               {/* Big Impactful Headline */}
-              <h1 className="display-hero text-[clamp(3.5rem,7vw,6.5rem)] text-ink leading-[0.90] tracking-tight">
+              <h1 className="display-hero text-[clamp(2.5rem,7.5vw,6.5rem)] text-ink leading-[0.90] tracking-tight">
                 {nameWords.map((word, i) => (
                   <span key={word} className="block overflow-hidden">
                     <motion.span
@@ -93,7 +93,7 @@ export function HomePage() {
               </h1>
             </div>
 
-            {/* ACT 2: DUAL PHILOSOPHY POINTS — Visible during middle walk (18% -> 54% on right, 18% -> 62% on left) */}
+            {/* ACT 2: PHILOSOPHY QUOTE — Bottom Sheet on Mobile, Dual Flanks on Desktop (18% -> 62%) */}
             {(() => {
               const leftQuoteOpacity = scrollProgress >= 0.18 && scrollProgress <= 0.62
                 ? Math.min(
@@ -111,25 +111,25 @@ export function HomePage() {
 
               return (
                 <>
-                  {/* Left Flank Quote */}
+                  {/* Left Quote: Bottom card on mobile, Left-flank on desktop */}
                   <div
-                    className="absolute left-6 sm:left-8 lg:left-12 top-1/2 -translate-y-1/2 flex w-full max-w-[280px] sm:max-w-[310px] lg:max-w-[330px] flex-col gap-3.5 pointer-events-auto transition-opacity duration-150 ease-out"
+                    className="absolute inset-x-4 bottom-8 sm:bottom-12 lg:inset-x-auto lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2 lg:left-12 flex w-auto lg:w-full lg:max-w-[330px] flex-col gap-2.5 sm:gap-3.5 pointer-events-auto transition-opacity duration-150 ease-out p-3.5 sm:p-4 rounded-xl lg:p-0 bg-surface/90 lg:bg-transparent backdrop-blur-sm border border-line/50 lg:border-none shadow-sm lg:shadow-none"
                     style={{
                       opacity: leftQuoteOpacity,
                       pointerEvents: leftQuoteOpacity > 0.1 ? 'auto' : 'none',
                     }}
                   >
-                    <p className="eyebrow text-xs uppercase tracking-[0.2em] font-mono text-primary font-semibold flex items-center gap-2">
+                    <p className="eyebrow text-[10px] sm:text-xs uppercase tracking-[0.2em] font-mono text-primary font-semibold flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-primary animate-pulse" /> 01 // INSIGHT
                     </p>
-                    <p className="font-display text-xl sm:text-2xl lg:text-[1.85rem] text-ink font-medium leading-[1.25] tracking-tight">
+                    <p className="font-display text-base sm:text-xl lg:text-[1.85rem] text-ink font-medium leading-[1.22] tracking-tight">
                       “Turning raw intelligence into seamless user experiences.”
                     </p>
                   </div>
 
-                  {/* Right Flank Quote */}
+                  {/* Right Quote: Visible exclusively on Desktop (lg+) to avoid mobile collisions */}
                   <div
-                    className="absolute right-6 sm:right-8 lg:right-12 top-1/2 -translate-y-1/2 flex w-full max-w-[260px] sm:max-w-[290px] lg:max-w-[320px] flex-col gap-3.5 pointer-events-auto transition-opacity duration-150 ease-out text-right"
+                    className="hidden lg:flex absolute right-12 top-1/2 -translate-y-1/2 w-full max-w-[320px] flex-col gap-3.5 pointer-events-auto transition-opacity duration-150 ease-out text-right"
                     style={{
                       opacity: rightQuoteOpacity,
                       pointerEvents: rightQuoteOpacity > 0.1 ? 'auto' : 'none',
@@ -138,7 +138,7 @@ export function HomePage() {
                     <p className="eyebrow text-xs uppercase tracking-[0.2em] font-mono text-primary font-semibold flex items-center justify-end gap-2">
                       02 // CRAFTSMANSHIP <span className="h-2 w-2 rounded-full bg-primary" />
                     </p>
-                    <p className="font-display text-xl sm:text-2xl lg:text-[1.85rem] text-ink font-medium leading-[1.25] tracking-tight">
+                    <p className="font-display text-[1.85rem] text-ink font-medium leading-[1.25] tracking-tight">
                       “Engineering scalable systems with analytical precision.”
                     </p>
                   </div>
@@ -146,9 +146,9 @@ export function HomePage() {
               )
             })()}
 
-            {/* ACT 3: LEFT COLUMN — Visible strictly at End (~68% -> 100%) when person has settled on the RIGHT */}
+            {/* ACT 3: Final Credentials & CTA — Bottom Sheet on Mobile, Left Column on Desktop (68% -> 100%) */}
             <div
-              className="absolute left-6 sm:left-10 lg:left-16 top-1/2 -translate-y-1/2 flex w-full max-w-[460px] lg:max-w-[520px] flex-col justify-center gap-7 py-4 pointer-events-auto transition-opacity duration-200 ease-out"
+              className="absolute inset-x-4 bottom-4 sm:bottom-6 lg:inset-x-auto lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2 lg:left-16 flex w-auto lg:w-full lg:max-w-[520px] flex-col justify-end lg:justify-center gap-3 sm:gap-4 lg:gap-7 pointer-events-auto transition-opacity duration-200 ease-out p-4 sm:p-5 rounded-2xl lg:p-0 bg-gradient-to-t from-surface via-surface/95 to-surface/40 lg:bg-none backdrop-blur-[2px] lg:backdrop-blur-none border border-line/40 lg:border-none shadow-sm lg:shadow-none"
               style={{
                 // Only fades in once person has cleared to the right (starts at 0.68, full at 0.85)
                 opacity: Math.max(0, Math.min(1, (scrollProgress - 0.68) / 0.17)),
@@ -156,7 +156,7 @@ export function HomePage() {
               }}
             >
               {/* Big Headline */}
-              <h1 className="display-hero text-[clamp(3.25rem,6.5vw,6rem)] text-ink leading-[0.90] tracking-tight">
+              <h1 className="display-hero text-[clamp(2.25rem,6vw,6rem)] text-ink leading-[0.90] tracking-tight">
                 {nameWords.map((word, i) => (
                   <span key={word} className="block">
                     {word}
@@ -165,36 +165,36 @@ export function HomePage() {
                 ))}
               </h1>
 
-              {/* Information Stack without overflowing horizontal border line */}
-              <div className="grid grid-cols-2 gap-x-6 gap-y-5 pt-2">
+              {/* Information Grid */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 sm:gap-x-6 sm:gap-y-5 pt-1 lg:pt-2">
                 <div>
-                  <p className="eyebrow text-xs uppercase tracking-[0.2em] font-mono font-semibold text-muted">Latest</p>
-                  <p className="mt-1 text-base sm:text-lg font-semibold text-ink leading-snug">
+                  <p className="eyebrow text-[9px] sm:text-xs uppercase tracking-[0.2em] font-mono font-semibold text-muted">Latest</p>
+                  <p className="mt-0.5 sm:mt-1 text-xs sm:text-base lg:text-lg font-semibold text-ink leading-snug">
                     {experience[0] ? `${experience[0].role} · ${experience[0].org}` : 'Data Analyst · Nexus Infotech'}
                   </p>
                 </div>
 
                 <div>
-                  <p className="eyebrow text-xs uppercase tracking-[0.2em] font-mono font-semibold text-muted">Education</p>
-                  <p className="mt-1 text-base sm:text-lg font-semibold text-ink leading-snug">
+                  <p className="eyebrow text-[9px] sm:text-xs uppercase tracking-[0.2em] font-mono font-semibold text-muted">Education</p>
+                  <p className="mt-0.5 sm:mt-1 text-xs sm:text-base lg:text-lg font-semibold text-ink leading-snug">
                     CGPA {profile.cgpa} · B.Tech CSE
                   </p>
                 </div>
 
                 <div>
-                  <p className="eyebrow text-xs uppercase tracking-[0.2em] font-mono font-semibold text-muted">Open to</p>
-                  <p className="mt-1 flex items-center gap-2 text-sm sm:text-base font-semibold text-ink leading-snug">
-                    <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-success animate-pulse" />
-                    Open to opportunities
+                  <p className="eyebrow text-[9px] sm:text-xs uppercase tracking-[0.2em] font-mono font-semibold text-muted">Open to</p>
+                  <p className="mt-0.5 sm:mt-1 flex items-center gap-1.5 text-xs sm:text-sm lg:text-base font-semibold text-ink leading-snug">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-success animate-pulse" />
+                    Open to roles
                   </p>
                 </div>
 
                 <div className="flex items-end">
                   <Link
                     to="/projects"
-                    className="link-underline flex items-center gap-2 font-mono text-sm sm:text-base uppercase tracking-[0.16em] text-ink font-bold hover:text-primary transition-colors"
+                    className="link-underline flex items-center gap-1.5 font-mono text-xs sm:text-sm lg:text-base uppercase tracking-[0.16em] text-ink font-bold hover:text-primary transition-colors"
                   >
-                    View work <ArrowDownRight size={18} />
+                    View work <ArrowDownRight size={16} />
                   </Link>
                 </div>
               </div>

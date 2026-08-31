@@ -172,7 +172,10 @@ export function ScrollPortrait({ scrollProgress = 0, className }: ScrollPortrait
 
     const renderLoop = () => {
       const clampedProgress = Math.max(0, Math.min(1, scrollProgress))
-      const targetFrame = Math.round(clampedProgress * (FRAME_COUNT - 1))
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
+      // On mobile screens (< 1024px), cap at frame 155 to lock the centered portrait posture without drifting off-screen
+      const maxTargetFrame = isMobile ? 155 : FRAME_COUNT - 1
+      const targetFrame = Math.round(clampedProgress * maxTargetFrame)
 
       if (reduced) {
         if (lastRenderedFrame.current !== targetFrame) {
