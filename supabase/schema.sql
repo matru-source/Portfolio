@@ -111,11 +111,15 @@ drop policy if exists "admins read visit logs" on public.visitor_logs;
 create policy "admins read visit logs"
   on public.visitor_logs for select
   to authenticated
-  using ( (auth.jwt() ->> 'email') in ('itsmatruprasad@gmail.com', 'matruprasadpanda497@gmail.com') );
+  using ( lower(auth.jwt() ->> 'email') in ('itsmatruprasad@gmail.com', 'matruprasadpanda497@gmail.com') );
 
 -- Only admins can delete visitor logs
 drop policy if exists "admins delete visit logs" on public.visitor_logs;
 create policy "admins delete visit logs"
   on public.visitor_logs for delete
   to authenticated
-  using ( (auth.jwt() ->> 'email') in ('itsmatruprasad@gmail.com', 'matruprasadpanda497@gmail.com') );
+  using ( lower(auth.jwt() ->> 'email') in ('itsmatruprasad@gmail.com', 'matruprasadpanda497@gmail.com') );
+
+-- Reload Supabase PostgREST schema cache
+notify pgrst, 'reload schema';
+

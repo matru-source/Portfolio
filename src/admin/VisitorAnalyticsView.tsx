@@ -68,7 +68,10 @@ drop policy if exists "admins delete visit logs" on public.visitor_logs;
 create policy "admins delete visit logs"
   on public.visitor_logs for delete
   to authenticated
-  using ( lower(auth.jwt() ->> 'email') in ('itsmatruprasad@gmail.com', 'matruprasadpanda497@gmail.com') );`
+  using ( lower(auth.jwt() ->> 'email') in ('itsmatruprasad@gmail.com', 'matruprasadpanda497@gmail.com') );
+
+-- 5) Reload Supabase schema cache
+notify pgrst, 'reload schema';`
 
 function parseErrorMessage(e: unknown): string {
   if (!e) return 'Unknown error'
@@ -113,10 +116,15 @@ export function VisitorAnalyticsView() {
       if (error) {
         const msg = parseErrorMessage(error)
         const code = (error as { code?: string }).code
+        const lower = msg.toLowerCase()
         if (
           code === '42P01' ||
-          msg.toLowerCase().includes('relation') ||
-          msg.toLowerCase().includes('does not exist')
+          code === 'PGRST204' ||
+          code === 'PGRST205' ||
+          lower.includes('schema cache') ||
+          lower.includes('could not find the table') ||
+          lower.includes('relation') ||
+          lower.includes('does not exist')
         ) {
           setIsTableMissing(true)
           setLogs([])
