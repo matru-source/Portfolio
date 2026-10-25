@@ -325,12 +325,12 @@ export function VisitorAnalyticsView() {
                 {copiedSql ? 'Copied to Clipboard!' : 'Copy SQL Script'}
               </button>
               <a
-                href="https://supabase.com/dashboard"
+                href="https://supabase.com/dashboard/project/euibyfjcwqjapbnlzqbs/sql/new"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-lg border border-line bg-white px-3 py-2 text-xs font-medium text-ink hover:border-primary"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-xs font-semibold text-primary hover:border-primary shadow-2xs"
               >
-                Supabase <ExternalLink size={12} />
+                Open SQL Editor <ExternalLink size={13} />
               </a>
             </div>
           </div>
