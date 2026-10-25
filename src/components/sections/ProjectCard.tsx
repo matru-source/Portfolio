@@ -39,7 +39,7 @@ export function ProjectCard({ project }: { project: Project }) {
         <div
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
-          className="relative mb-6 aspect-[16/9] overflow-hidden rounded-xl border border-line bg-canvas"
+          className="relative mb-6 flex aspect-[16/9] items-center justify-center overflow-hidden rounded-xl border border-line bg-canvas/80"
         >
           {project.liveUrl ? (
             <a
@@ -56,14 +56,14 @@ export function ProjectCard({ project }: { project: Project }) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.35 }}
-                  className="absolute inset-0 h-full w-full"
+                  className="absolute inset-0 flex h-full w-full items-center justify-center"
                 >
                   <GalleryImage
                     src={currentSrc}
                     alt={project.name}
                     label={project.name}
                     className="h-full w-full"
-                    imgClassName="transition-transform duration-500 group-hover/img:scale-[1.04]"
+                    imgClassName="h-full w-full object-contain transition-transform duration-500 group-hover/img:scale-[1.02]"
                   />
                 </motion.div>
               </AnimatePresence>
@@ -76,13 +76,14 @@ export function ProjectCard({ project }: { project: Project }) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.35 }}
-                className="absolute inset-0 h-full w-full"
+                className="absolute inset-0 flex h-full w-full items-center justify-center"
               >
                 <GalleryImage
                   src={currentSrc}
                   alt={project.name}
                   label={project.name}
                   className="h-full w-full"
+                  imgClassName="h-full w-full object-contain"
                 />
               </motion.div>
             </AnimatePresence>
