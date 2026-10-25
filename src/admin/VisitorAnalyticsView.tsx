@@ -310,34 +310,34 @@ export function VisitorAnalyticsView() {
                 </h3>
               </div>
               <p className="mt-1 text-xs text-body leading-relaxed max-w-2xl">
-                The <code className="rounded bg-canvas px-1.5 py-0.5 font-mono font-semibold text-ink">visitor_logs</code> table hasn&apos;t been created in your Supabase project yet.
-                Click <strong>&quot;Copy SQL Script&quot;</strong>, open your Supabase SQL editor, paste and run it.
+                Because Supabase requires database administrator permissions to create new tables, this website cannot create the table directly.
+                You just need to paste and click <strong>Run</strong> once inside your Supabase project.
               </p>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={copySql}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3.5 py-2 text-xs font-medium text-surface transition hover:bg-black"
               >
                 {copiedSql ? <Check size={14} className="text-success" /> : <Copy size={14} />}
-                {copiedSql ? 'Copied to Clipboard!' : 'Copy SQL Script'}
+                {copiedSql ? '1. Copied to Clipboard!' : '1. Copy SQL Script'}
               </button>
               <a
                 href="https://supabase.com/dashboard/project/euibyfjcwqjapbnlzqbs/sql/new"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-xs font-semibold text-primary hover:border-primary shadow-2xs"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-primary-dark"
               >
-                Open SQL Editor <ExternalLink size={13} />
+                2. Open SQL Editor in Supabase <ExternalLink size={13} />
               </a>
             </div>
           </div>
 
           <div className="mt-4 overflow-hidden rounded-lg border border-line bg-canvas">
             <div className="flex items-center justify-between border-b border-line/60 bg-surface/50 px-3 py-1.5 text-[11px] font-mono text-muted">
-              <span>SQL Query (supabase/schema.sql)</span>
+              <span>SQL Query (paste this into Supabase SQL editor)</span>
               <span>PostgreSQL</span>
             </div>
             <pre className="max-h-44 overflow-x-auto p-3 font-mono text-[11px] leading-relaxed text-ink/80">
@@ -346,18 +346,16 @@ export function VisitorAnalyticsView() {
           </div>
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line/60 pt-3">
-            <ol className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
-              <li>1. Copy SQL</li>
-              <li>➔ 2. Paste in Supabase SQL Editor &amp; Run</li>
-              <li>➔ 3. Click Refresh below</li>
-            </ol>
+            <p className="text-xs text-muted">
+              After pressing the green <strong>Run</strong> button in Supabase, click check below:
+            </p>
             <button
               type="button"
               onClick={fetchLogs}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-1.5 text-xs font-semibold text-ink hover:border-primary disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-4 py-2 text-xs font-semibold text-ink hover:border-primary hover:bg-canvas disabled:opacity-50"
             >
-              <RefreshCw size={13} className={cn(loading && 'animate-spin')} /> I have run the SQL, Refresh Now
+              <RefreshCw size={13} className={cn(loading && 'animate-spin')} /> 3. Check Table Status (Refresh)
             </button>
           </div>
         </div>
