@@ -31,30 +31,56 @@ export function useVisitorTracker() {
 
     // 5. Fetch approximate location from ipwho.is (fast, free, no API key needed)
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 3500)
+    const timer = setTimeout(() => controller.abort(), 4000)
 
     fetch('https://ipwho.is/', { signal: controller.signal })
       .then((res) => res.json())
       .then(async (data) => {
         clearTimeout(timer)
-        if (data && data.success) {
-          await supabase?.from('visitor_logs').insert({
-            ip: data.ip || 'Unknown',
-            city: data.city || 'Unknown',
-            region: data.region || '',
-            country: data.country || 'Unknown',
-            country_code: data.country_code || '',
-            flag: data.flag?.img || '',
-            isp: data.connection?.isp || data.connection?.org || '',
+        const isSuccess = data && data.success !== false
+        const payload = {
+          ip: data?.ip || 'Direct',
+          city: (isSuccess && data?.city) || 'Local / Direct',
+          region: (isSuccess && data?.region) || '',
+          country: (isSuccess && data?.country) || 'Local',
+          country_code: (isSuccess && data?.country_code) || '',
+          flag: (isSuccess && data?.flag?.img) || '',
+          isp: (isSuccess && (data?.connection?.isp || data?.connection?.org)) || 'Direct Connection',
+          page: window.location.pathname || '/',
+          user_agent: ua,
+          device,
+          browser,
+        }
+
+        if (!supabase) return
+        const { error } = await supabase.from('visitor_logs').insert(payload)
+        if (!error) {
+          sessionStorage.setItem(SESSION_KEY, String(Date.now()))
+        }
+      })
+      .catch(async () => {
+        // Fallback: log device & page even if geolocation provider was blocked
+        try {
+          if (!supabase) return
+          const { error } = await supabase.from('visitor_logs').insert({
+            ip: 'Direct',
+            city: 'Unknown',
+            region: '',
+            country: 'Unknown',
+            country_code: '',
+            flag: '',
+            isp: 'Direct',
             page: window.location.pathname || '/',
             user_agent: ua,
             device,
             browser,
           })
+          if (!error) {
+            sessionStorage.setItem(SESSION_KEY, String(Date.now()))
+          }
+        } catch {
+          // ignore
         }
-      })
-      .catch(() => {
-        // Silently ignore if blocked by client privacy extensions or offline
       })
 
     return () => {

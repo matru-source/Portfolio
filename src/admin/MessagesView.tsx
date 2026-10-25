@@ -21,7 +21,7 @@ interface ContactMessage {
   created_at: string
 }
 
-export const MESSAGES_SQL = `-- 1) Create messages table in Supabase
+const MESSAGES_SQL = `-- 1) Create messages table in Supabase
 create table if not exists public.messages (
   id         uuid primary key default gen_random_uuid(),
   name       text not null,

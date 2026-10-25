@@ -30,7 +30,7 @@ interface VisitorLog {
   created_at: string
 }
 
-export const VISITOR_LOGS_SQL = `-- 1) Create visitor_logs table in Supabase
+const VISITOR_LOGS_SQL = `-- 1) Create visitor_logs table in Supabase
 create table if not exists public.visitor_logs (
   id           uuid primary key default gen_random_uuid(),
   ip           text,
