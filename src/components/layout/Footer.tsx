@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, Check } from 'lucide-react'
 import { navItems, buildSocials } from '@/data'
 import { useContent } from '@/content'
 import { socialIcon } from './socialIcons'
@@ -8,6 +9,18 @@ export function Footer() {
   const { profile, site } = useContent()
   const year = new Date().getFullYear()
   const socials = buildSocials(profile)
+
+  const [copiedEmail, setCopiedEmail] = useState(false)
+
+  const handleSocialClick = (href: string) => {
+    if (href.startsWith('mailto:')) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(profile.email).catch(() => {})
+        setCopiedEmail(true)
+        setTimeout(() => setCopiedEmail(false), 2500)
+      }
+    }
+  }
 
   return (
     <footer className="border-t border-line bg-canvas">
@@ -52,16 +65,24 @@ export function Footer() {
               <p className="eyebrow mb-1">Connect</p>
               {socials.map((s) => {
                 const Icon = socialIcon(s.icon)
+                const isMail = s.href.startsWith('mailto:')
                 return (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="link-underline flex w-fit items-center gap-2 text-sm text-body hover:text-ink"
-                  >
-                    <Icon size={15} /> {s.label}
-                  </a>
+                  <div key={s.label} className="flex items-center gap-2">
+                    <a
+                      href={s.href}
+                      target={isMail ? undefined : '_blank'}
+                      rel={isMail ? undefined : 'noreferrer noopener'}
+                      onClick={() => handleSocialClick(s.href)}
+                      className="link-underline flex w-fit items-center gap-2 text-sm text-body hover:text-ink"
+                    >
+                      <Icon size={15} /> {s.label}
+                    </a>
+                    {isMail && copiedEmail && (
+                      <span className="inline-flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                        <Check size={11} /> Copied!
+                      </span>
+                    )}
+                  </div>
                 )
               })}
             </div>

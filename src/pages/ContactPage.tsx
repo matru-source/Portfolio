@@ -1,4 +1,5 @@
-import { Download, Mail, MapPin, Phone } from 'lucide-react'
+import { useState } from 'react'
+import { Check, Download, Mail, MapPin, Phone } from 'lucide-react'
 import { ContactForm } from '@/components/sections/ContactForm'
 import { Section, SectionHeading, Reveal, Card, buttonStyles } from '@/components/ui'
 import { buildSocials } from '@/data'
@@ -8,6 +9,15 @@ import { socialIcon } from '@/components/layout/socialIcons'
 export function ContactPage() {
   const { profile } = useContent()
   const socials = buildSocials(profile)
+  const [copiedEmail, setCopiedEmail] = useState(false)
+
+  const copyEmail = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(profile.email).catch(() => {})
+      setCopiedEmail(true)
+      setTimeout(() => setCopiedEmail(false), 2500)
+    }
+  }
 
   return (
     <Section>
@@ -25,13 +35,16 @@ export function ContactPage() {
             <li>
               <a
                 href={`mailto:${profile.email}`}
+                onClick={copyEmail}
                 className="flex items-center gap-4 text-body transition-colors hover:text-primary"
               >
                 <span className="grid h-11 w-11 place-items-center rounded-lg bg-primary-50 text-primary">
                   <Mail size={18} />
                 </span>
                 <span>
-                  <span className="block text-xs uppercase tracking-wider text-muted">Email</span>
+                  <span className="block text-xs uppercase tracking-wider text-muted">
+                    Email {copiedEmail && <span className="ml-1 text-primary lowercase">(copied to clipboard!)</span>}
+                  </span>
                   {profile.email}
                 </span>
               </a>
@@ -64,12 +77,14 @@ export function ContactPage() {
           <div className="mt-8 flex flex-wrap items-center gap-3">
             {socials.map((s) => {
               const Icon = socialIcon(s.icon)
+              const isMail = s.href.startsWith('mailto:')
               return (
                 <a
                   key={s.label}
                   href={s.href}
-                  target="_blank"
-                  rel="noreferrer noopener"
+                  target={isMail ? undefined : '_blank'}
+                  rel={isMail ? undefined : 'noreferrer noopener'}
+                  onClick={isMail ? copyEmail : undefined}
                   aria-label={s.label}
                   className="grid h-11 w-11 place-items-center rounded-full border border-line bg-white text-body transition-colors hover:border-primary/40 hover:text-primary"
                 >
