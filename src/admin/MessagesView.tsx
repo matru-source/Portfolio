@@ -1,5 +1,14 @@
-import { useEffect, useState } from 'react'
-import { Mail, RefreshCw, Trash2, User } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  Check,
+  Copy,
+  Inbox,
+  Mail,
+  RefreshCw,
+  Search,
+  Trash2,
+  User,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/cn'
 
@@ -14,6 +23,8 @@ interface ContactMessage {
 export function MessagesView() {
   const [messages, setMessages] = useState<ContactMessage[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
 
   const fetchMessages = async () => {
@@ -49,7 +60,7 @@ export function MessagesView() {
   }, [])
 
   const deleteMessage = async (id: string) => {
-    if (!window.confirm('Delete this message?')) return
+    if (!window.confirm('Delete this message permanently?')) return
     if (!supabase) return
     try {
       const { error } = await supabase.from('messages').delete().eq('id', id)
@@ -59,6 +70,27 @@ export function MessagesView() {
       alert('Delete failed: ' + (e instanceof Error ? e.message : String(e)))
     }
   }
+
+  const copyEmail = async (id: string, email: string) => {
+    try {
+      await navigator.clipboard.writeText(email)
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch {
+      // fallback
+    }
+  }
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return messages
+    const q = search.toLowerCase()
+    return messages.filter(
+      (m) =>
+        m.name.toLowerCase().includes(q) ||
+        m.email.toLowerCase().includes(q) ||
+        m.message.toLowerCase().includes(q),
+    )
+  }, [messages, search])
 
   const formatTime = (iso: string) => {
     try {
@@ -78,21 +110,53 @@ export function MessagesView() {
 
   return (
     <div className="space-y-4">
-      {/* Header bar */}
-      <div className="flex items-center justify-between border-b border-line pb-4">
-        <div>
-          <p className="text-xs text-muted">
-            {messages.length} contact form submission{messages.length === 1 ? '' : 's'} received
-          </p>
+      {/* Top Controls & Search Bar */}
+      <div className="card p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-lg font-semibold text-ink">Messages Inbox</h2>
+              <span className="rounded-full bg-primary-50 px-2 py-0.5 text-xs font-semibold text-primary">
+                {messages.length} total
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs text-muted">
+              Inquiries and messages submitted by portfolio visitors
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={fetchMessages}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-medium text-ink hover:border-primary disabled:opacity-50"
+            >
+              <RefreshCw size={13} className={cn(loading && 'animate-spin')} /> Refresh
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={fetchMessages}
-          disabled={loading}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-medium text-ink hover:border-primary disabled:opacity-50"
-        >
-          <RefreshCw size={13} className={cn(loading && 'animate-spin')} /> Refresh
-        </button>
+
+        {/* Search */}
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-xs">
+          <Search size={14} className="text-muted" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search messages by name, email, or message keyword…"
+            className="w-full bg-transparent text-ink placeholder:text-muted focus:outline-hidden"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="text-xs text-muted hover:text-ink"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {err && (
@@ -103,39 +167,62 @@ export function MessagesView() {
       )}
 
       {loading ? (
-        <div className="grid h-48 place-items-center text-sm text-muted">
+        <div className="card grid h-48 place-items-center text-sm text-muted">
           <div className="flex items-center gap-2">
             <RefreshCw size={16} className="animate-spin text-primary" />
             Loading messages…
           </div>
         </div>
-      ) : messages.length === 0 ? (
-        <div className="grid h-48 place-items-center rounded-xl border border-line bg-white p-6 text-center text-sm text-muted">
+      ) : filtered.length === 0 ? (
+        <div className="card grid h-48 place-items-center p-6 text-center text-sm text-muted">
           <div>
-            <p className="font-medium text-ink">No messages received yet.</p>
-            <p className="mt-1 text-xs">When visitors submit the contact form, their inquiries will appear here.</p>
+            <Inbox size={28} className="mx-auto mb-2 text-muted/60" />
+            <p className="font-medium text-ink">
+              {search ? 'No messages match your search.' : 'No messages received yet.'}
+            </p>
+            <p className="mt-1 text-xs">
+              {search
+                ? 'Try searching for something else.'
+                : 'When visitors submit the contact form, their inquiries will appear here automatically.'}
+            </p>
           </div>
         </div>
       ) : (
         <div className="space-y-3">
-          {messages.map((m) => (
+          {filtered.map((m) => (
             <div
               key={m.id}
-              className="rounded-xl border border-line bg-white p-5 shadow-xs transition-shadow hover:shadow-sm"
+              className="card p-5 transition-shadow hover:shadow-md"
             >
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line/60 pb-3">
                 <div className="flex items-center gap-3">
-                  <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-50 text-primary">
-                    <User size={16} />
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-50 text-primary">
+                    <User size={18} />
                   </span>
                   <div>
-                    <p className="font-display text-sm font-bold text-ink">{m.name}</p>
-                    <a
-                      href={`mailto:${m.email}`}
-                      className="font-mono text-xs text-primary hover:underline"
-                    >
-                      {m.email}
-                    </a>
+                    <div className="flex items-center gap-2">
+                      <p className="font-display text-sm font-bold text-ink">{m.name}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`mailto:${m.email}`}
+                        className="font-mono text-xs text-primary hover:underline"
+                      >
+                        {m.email}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => copyEmail(m.id, m.email)}
+                        className="text-muted hover:text-ink"
+                        title="Copy email address"
+                      >
+                        {copiedId === m.id ? (
+                          <Check size={12} className="text-success" />
+                        ) : (
+                          <Copy size={12} />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -143,22 +230,22 @@ export function MessagesView() {
                   <span className="font-mono text-xs text-muted">{formatTime(m.created_at)}</span>
                   <a
                     href={`mailto:${m.email}?subject=${encodeURIComponent('Re: Portfolio inquiry')}`}
-                    className="inline-flex items-center gap-1 rounded-lg border border-line bg-white px-2.5 py-1 text-xs font-medium text-ink hover:border-primary hover:text-primary"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-xs font-medium text-surface transition-colors hover:bg-black"
                   >
-                    <Mail size={12} /> Reply
+                    <Mail size={13} /> Reply
                   </a>
                   <button
                     type="button"
                     onClick={() => deleteMessage(m.id)}
-                    className="grid h-7 w-7 place-items-center rounded-lg text-danger hover:bg-danger/10"
+                    className="grid h-8 w-8 place-items-center rounded-lg text-danger hover:bg-danger/10"
                     title="Delete message"
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>
 
-              <div className="mt-3.5 whitespace-pre-wrap text-sm leading-relaxed text-body">
+              <div className="mt-4 whitespace-pre-wrap rounded-lg bg-canvas/60 p-3.5 text-sm leading-relaxed text-body">
                 {m.message}
               </div>
             </div>
