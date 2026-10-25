@@ -4,9 +4,11 @@ import { Footer } from './Footer'
 import { ScrollToTop } from './ScrollToTop'
 import { SmoothScroll } from './SmoothScroll'
 import { RouteMeta } from './RouteMeta'
+import { useVisitorTracker } from '@/hooks'
 
 /** App shell — sticky nav, routed page content, footer. */
 export function Layout() {
+  useVisitorTracker()
   return (
     <>
       <SmoothScroll />

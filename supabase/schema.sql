@@ -79,3 +79,43 @@ create policy "admins delete messages"
   on public.messages for delete
   to authenticated
   using ( (auth.jwt() ->> 'email') in ('itsmatruprasad@gmail.com', 'matruprasadpanda497@gmail.com') );
+
+-- 5) Visitor Analytics & Geolocation Tracking
+create table if not exists public.visitor_logs (
+  id           uuid primary key default gen_random_uuid(),
+  ip           text,
+  city         text,
+  region       text,
+  country      text,
+  country_code text,
+  flag         text,
+  isp          text,
+  page         text,
+  user_agent   text,
+  device       text,
+  browser      text,
+  created_at   timestamptz not null default now()
+);
+
+alter table public.visitor_logs enable row level security;
+
+-- Anyone can log a visit (the public visitor)
+drop policy if exists "anyone can log visit" on public.visitor_logs;
+create policy "anyone can log visit"
+  on public.visitor_logs for insert
+  to anon, authenticated
+  with check (true);
+
+-- Only admins can view visitor logs
+drop policy if exists "admins read visit logs" on public.visitor_logs;
+create policy "admins read visit logs"
+  on public.visitor_logs for select
+  to authenticated
+  using ( (auth.jwt() ->> 'email') in ('itsmatruprasad@gmail.com', 'matruprasadpanda497@gmail.com') );
+
+-- Only admins can delete visitor logs
+drop policy if exists "admins delete visit logs" on public.visitor_logs;
+create policy "admins delete visit logs"
+  on public.visitor_logs for delete
+  to authenticated
+  using ( (auth.jwt() ->> 'email') in ('itsmatruprasad@gmail.com', 'matruprasadpanda497@gmail.com') );

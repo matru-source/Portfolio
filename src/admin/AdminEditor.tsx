@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Check, ExternalLink, LogOut, RotateCcw, Save } from 'lucide-react'
+import { Check, ExternalLink, Globe, Inbox, LogOut, RotateCcw, Save } from 'lucide-react'
 import { useContentAdmin, type SiteContent } from '@/content'
 import { useAuth } from './AuthProvider'
 import { SECTIONS } from './schema'
 import { ObjectEditor, ListEditor } from './editors'
+import { VisitorAnalyticsView } from './VisitorAnalyticsView'
+import { MessagesView } from './MessagesView'
 import { cn } from '@/lib/cn'
 
 type Row = Record<string, unknown>
+type TabKey = (keyof SiteContent) | 'analytics' | 'messages'
 
 /** Deep-clean: trim and drop empty strings from string arrays before saving. */
 function clean(content: SiteContent): SiteContent {
@@ -33,7 +36,7 @@ export function AdminEditor() {
 
   const [draft, setDraft] = useState<SiteContent>(() => structuredClone(content))
   const [touched, setTouched] = useState(false)
-  const [active, setActive] = useState<keyof SiteContent>(SECTIONS[0].key)
+  const [active, setActive] = useState<TabKey>('analytics')
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [err, setErr] = useState<string | null>(null)
 
@@ -43,9 +46,11 @@ export function AdminEditor() {
   }, [content, touched])
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(content)
+  const isContentSection = active !== 'analytics' && active !== 'messages'
   const section = SECTIONS.find((s) => s.key === active) ?? SECTIONS[0]
 
   const updateSection = (value: unknown) => {
+    if (!isContentSection) return
     setTouched(true)
     setStatus('idle')
     setDraft((d) => ({ ...d, [section.key]: value }) as unknown as SiteContent)
@@ -132,68 +137,123 @@ export function AdminEditor() {
       </header>
 
       <div className="mx-auto flex max-w-6xl gap-6 px-4 py-6 sm:px-6">
-        {/* Section nav */}
-        <aside className="hidden w-52 shrink-0 md:block">
-          <nav className="sticky top-24 space-y-1">
-            {SECTIONS.map((s) => (
-              <button
-                key={s.key}
-                type="button"
-                onClick={() => setActive(s.key)}
-                className={cn(
-                  'block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors',
-                  active === s.key ? 'bg-ink text-surface' : 'text-body hover:bg-surface',
-                )}
-              >
-                {s.label}
-              </button>
-            ))}
+        {/* Navigation sidebar */}
+        <aside className="hidden w-56 shrink-0 md:block">
+          <nav className="sticky top-24 space-y-3">
+            <div>
+              <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                Live Records
+              </p>
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => setActive('analytics')}
+                  className={cn(
+                    'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors',
+                    active === 'analytics'
+                      ? 'bg-ink text-surface shadow-xs'
+                      : 'text-body hover:bg-surface hover:text-ink',
+                  )}
+                >
+                  <Globe size={15} className="shrink-0" />
+                  <span>Visitor Analytics</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActive('messages')}
+                  className={cn(
+                    'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors',
+                    active === 'messages'
+                      ? 'bg-ink text-surface shadow-xs'
+                      : 'text-body hover:bg-surface hover:text-ink',
+                  )}
+                >
+                  <Inbox size={15} className="shrink-0" />
+                  <span>Messages Inbox</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="border-t border-line/60 pt-3">
+              <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                Site Content
+              </p>
+              <div className="space-y-1">
+                {SECTIONS.map((s) => (
+                  <button
+                    key={s.key}
+                    type="button"
+                    onClick={() => setActive(s.key)}
+                    className={cn(
+                      'block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors',
+                      active === s.key
+                        ? 'bg-ink text-surface font-medium'
+                        : 'text-body hover:bg-surface hover:text-ink',
+                    )}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </nav>
         </aside>
 
-        {/* Editor */}
+        {/* Main Content Area */}
         <main className="min-w-0 flex-1">
           {/* Mobile section selector */}
           <select
             value={String(active)}
-            onChange={(e) => setActive(e.target.value as keyof SiteContent)}
+            onChange={(e) => setActive(e.target.value as TabKey)}
             className="mb-4 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm md:hidden"
           >
-            {SECTIONS.map((s) => (
-              <option key={s.key} value={s.key}>
-                {s.label}
-              </option>
-            ))}
+            <optgroup label="Live Records">
+              <option value="analytics">🌍 Visitor Analytics</option>
+              <option value="messages">📬 Messages Inbox</option>
+            </optgroup>
+            <optgroup label="Site Content">
+              {SECTIONS.map((s) => (
+                <option key={s.key} value={s.key}>
+                  {s.label}
+                </option>
+              ))}
+            </optgroup>
           </select>
 
-          <div className="card p-5 sm:p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="font-display text-lg font-semibold text-ink">{section.label}</h2>
-              <span className="text-xs text-muted">
-                Signed in as {user?.email}
-              </span>
-            </div>
+          {active === 'analytics' ? (
+            <VisitorAnalyticsView />
+          ) : active === 'messages' ? (
+            <MessagesView />
+          ) : (
+            <>
+              <div className="card p-5 sm:p-6">
+                <div className="mb-5 flex items-center justify-between">
+                  <h2 className="font-display text-lg font-semibold text-ink">{section.label}</h2>
+                  <span className="text-xs text-muted">Signed in as {user?.email}</span>
+                </div>
 
-            {section.kind === 'object' ? (
-              <ObjectEditor
-                fields={section.fields}
-                value={draft[section.key] as unknown as Row}
-                onChange={updateSection}
-              />
-            ) : (
-              <ListEditor
-                items={draft[section.key] as unknown as Row[]}
-                fields={section.fields}
-                newItem={section.newItem}
-                labelKey={section.labelKey}
-                onChange={updateSection}
-              />
-            )}
-          </div>
+                {section.kind === 'object' ? (
+                  <ObjectEditor
+                    fields={section.fields}
+                    value={draft[section.key] as unknown as Row}
+                    onChange={updateSection}
+                  />
+                ) : (
+                  <ListEditor
+                    items={draft[section.key] as unknown as Row[]}
+                    fields={section.fields}
+                    newItem={section.newItem}
+                    labelKey={section.labelKey}
+                    onChange={updateSection}
+                  />
+                )}
+              </div>
 
-          <p className="mt-4 text-center text-xs text-muted">
-            Changes go live for everyone the moment you press <strong>Save</strong>.
-          </p>
+              <p className="mt-4 text-center text-xs text-muted">
+                Changes go live for everyone the moment you press <strong>Save</strong>.
+              </p>
+            </>
+          )}
         </main>
       </div>
     </div>
