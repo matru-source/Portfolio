@@ -3,16 +3,13 @@ import {
   ArrowDown,
   ArrowUp,
   Check,
-  CheckSquare,
   ChevronDown,
-  ExternalLink,
   FileText,
   Folder,
-  Image as ImageIcon,
+  GripVertical,
   Plus,
   RefreshCw,
   Search,
-  Square,
   Trash2,
   Upload,
   X,
@@ -1038,6 +1035,10 @@ export function ListEditor({
   onChange: (items: Row[]) => void
 }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null)
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
+  const [dragOverPos, setDragOverPos] = useState<'top' | 'bottom' | null>(null)
+  const [draggableCardIdx, setDraggableCardIdx] = useState<number | null>(null)
 
   const update = (i: number, obj: Row) => onChange(items.map((it, idx) => (idx === i ? obj : it)))
   const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i))
@@ -1055,6 +1056,67 @@ export function ListEditor({
     setOpenIdx(items.length)
   }
 
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(index))
+    setDraggedIdx(index)
+    // Collapse while dragging to keep layout compact & smooth
+    setOpenIdx(null)
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (draggedIdx === null || draggedIdx === index) {
+      setDragOverIdx(null)
+      setDragOverPos(null)
+      return
+    }
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const relY = e.clientY - rect.top
+    const pos = relY < rect.height / 2 ? 'top' : 'bottom'
+    setDragOverIdx(index)
+    setDragOverPos(pos)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverIdx(null)
+      setDragOverPos(null)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault()
+    if (draggedIdx === null || draggedIdx === targetIndex) {
+      handleDragEnd()
+      return
+    }
+
+    const copy = [...items]
+    const [movedItem] = copy.splice(draggedIdx, 1)
+
+    let insertIndex = targetIndex
+    if (draggedIdx < targetIndex) {
+      insertIndex = dragOverPos === 'top' ? targetIndex - 1 : targetIndex
+    } else {
+      insertIndex = dragOverPos === 'bottom' ? targetIndex + 1 : targetIndex
+    }
+
+    insertIndex = Math.max(0, Math.min(copy.length, insertIndex))
+    copy.splice(insertIndex, 0, movedItem)
+    onChange(copy)
+
+    handleDragEnd()
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIdx(null)
+    setDragOverIdx(null)
+    setDragOverPos(null)
+    setDraggableCardIdx(null)
+  }
+
   const titleOf = (it: Row) =>
     String(
       (labelKey && it[labelKey]) || it.title || it.name || it.label || it.org || 'Untitled',
@@ -1062,34 +1124,123 @@ export function ListEditor({
 
   return (
     <div className="space-y-2">
+      {/* Informative Hint Banner */}
+      <div className="flex items-center justify-between px-1 pb-1 text-xs text-muted">
+        <span>
+          💡 Double-click any card or drag the <strong>⠿</strong> handle to reorder.
+        </span>
+        <span className="font-mono text-[11px]">
+          {items.length} item{items.length === 1 ? '' : 's'}
+        </span>
+      </div>
+
       {items.map((it, i) => {
         const open = openIdx === i
+        const isDragging = draggedIdx === i
+        const isDragOver = dragOverIdx === i
+        const isDraggable = draggableCardIdx === i
+
         return (
-          <div key={(it.key as string) ?? i} className="overflow-hidden rounded-lg border border-line bg-white">
-            <div className="flex items-center justify-between gap-2 px-3 py-2">
+          <div
+            key={(it.key as string) ?? i}
+            draggable={isDraggable}
+            onDragStart={(e) => handleDragStart(e, i)}
+            onDragOver={(e) => handleDragOver(e, i)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, i)}
+            onDragEnd={handleDragEnd}
+            className={cn(
+              'relative rounded-lg border bg-white transition-all duration-150',
+              open ? 'shadow-sm' : '',
+              isDragging && 'opacity-40 scale-[0.99] border-dashed border-primary bg-primary-50/20 shadow-inner',
+              isDraggable && !isDragging && 'ring-2 ring-primary/40 border-primary bg-primary-50/10',
+              !isDragging && !isDraggable && 'border-line',
+              isDragOver && dragOverPos === 'top' && 'before:absolute before:inset-x-0 before:-top-1.5 before:h-1 before:rounded-full before:bg-primary before:z-30 before:shadow-sm',
+              isDragOver && dragOverPos === 'bottom' && 'after:absolute after:inset-x-0 after:-bottom-1.5 after:h-1 after:rounded-full after:bg-primary after:z-30 after:shadow-sm',
+            )}
+          >
+            <div
+              onDoubleClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setDraggableCardIdx(draggableCardIdx === i ? null : i)
+              }}
+              title="Double-click to enable drag mode, or drag by the ⠿ handle"
+              className={cn(
+                'flex items-center justify-between gap-2 px-3 py-2 select-none',
+                isDraggable ? 'cursor-grab active:cursor-grabbing' : '',
+              )}
+            >
+              {/* Drag Handle */}
+              <button
+                type="button"
+                draggable
+                onDragStart={(e) => {
+                  e.stopPropagation()
+                  handleDragStart(e, i)
+                }}
+                onDragEnd={handleDragEnd}
+                title="Drag to reorder"
+                className="grid h-7 w-6 cursor-grab active:cursor-grabbing place-items-center rounded text-muted hover:bg-canvas hover:text-ink"
+              >
+                <GripVertical size={15} />
+              </button>
+
+              {/* Accordion Toggle Title */}
               <button
                 type="button"
                 onClick={() => setOpenIdx(open ? null : i)}
-                className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
               >
                 <ChevronDown
                   size={15}
                   className={cn('shrink-0 text-muted transition-transform', open && 'rotate-180')}
                 />
+                <span className="font-mono text-xs text-muted">#{String(i + 1).padStart(2, '0')}</span>
                 <span className="truncate text-sm font-medium text-ink">{titleOf(it)}</span>
+                {it.featured === true && (
+                  <span className="rounded bg-accent-50 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase text-accent-700 border border-accent-200">
+                    Featured
+                  </span>
+                )}
+                {isDraggable && (
+                  <span className="rounded bg-primary px-1.5 py-0.5 font-mono text-[9px] font-bold text-white shadow-xs">
+                    DRAG READY
+                  </span>
+                )}
               </button>
+
+              {/* Action Buttons: Move Up, Move Down, Delete */}
               <div className="flex shrink-0 items-center gap-1">
-                <button type="button" onClick={() => move(i, -1)} aria-label="Move up" className="grid h-7 w-7 place-items-center rounded text-muted hover:bg-canvas hover:text-ink">
+                <button
+                  type="button"
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                  aria-label="Move up"
+                  className="grid h-7 w-7 place-items-center rounded text-muted hover:bg-canvas hover:text-ink disabled:opacity-30 disabled:hover:bg-transparent"
+                >
                   <ArrowUp size={14} />
                 </button>
-                <button type="button" onClick={() => move(i, 1)} aria-label="Move down" className="grid h-7 w-7 place-items-center rounded text-muted hover:bg-canvas hover:text-ink">
+                <button
+                  type="button"
+                  onClick={() => move(i, 1)}
+                  disabled={i === items.length - 1}
+                  aria-label="Move down"
+                  className="grid h-7 w-7 place-items-center rounded text-muted hover:bg-canvas hover:text-ink disabled:opacity-30 disabled:hover:bg-transparent"
+                >
                   <ArrowDown size={14} />
                 </button>
-                <button type="button" onClick={() => remove(i)} aria-label="Delete" className="grid h-7 w-7 place-items-center rounded text-danger hover:bg-danger/10">
+                <button
+                  type="button"
+                  onClick={() => remove(i)}
+                  aria-label="Delete"
+                  className="grid h-7 w-7 place-items-center rounded text-danger hover:bg-danger/10"
+                >
                   <Trash2 size={14} />
                 </button>
               </div>
             </div>
+
             {open && (
               <div className="border-t border-line p-3">
                 <ObjectEditor fields={fields} value={it} onChange={(obj) => update(i, obj)} />
@@ -1098,6 +1249,7 @@ export function ListEditor({
           </div>
         )
       })}
+
       <button
         type="button"
         onClick={add}

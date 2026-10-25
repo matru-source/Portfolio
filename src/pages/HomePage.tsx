@@ -12,11 +12,12 @@ export function HomePage() {
   const { profile, site, projects, certifications, experience } = useContent()
   const nameWords = profile.name.split(' ')
   const featured = projects.filter((p) => p.featured)
+  const formatCount = (count: number) => String(count).padStart(2, '0')
   const stats = [
     { value: profile.cgpa, label: 'CGPA · B.Tech CSE' },
-    { value: `0${projects.length}`, label: 'Projects' },
-    { value: `0${experience.length}`, label: 'Internships & roles' },
-    { value: `0${certifications.length}`.slice(-2), label: 'Certifications' },
+    { value: formatCount(projects.length), label: 'Projects' },
+    { value: formatCount(experience.length), label: 'Internships & roles' },
+    { value: formatCount(certifications.length), label: 'Certifications' },
   ]
 
   const [scrollProgress, setScrollProgress] = useState(0)
@@ -67,11 +68,20 @@ export function HomePage() {
               {/* Top Meta Bar */}
               <div className="flex items-start justify-between gap-3 sm:gap-4">
                 <p className="eyebrow text-[10px] sm:text-xs lg:text-sm max-w-[12rem] sm:max-w-[17rem] leading-relaxed">
-                  Full Stack Developer | Data Analyst — based in {profile.location}
+                  {profile.positioning
+                    ? profile.positioning.split(' | ').slice(0, 2).join(' | ')
+                    : 'Full Stack Developer | Data Analyst'}{' '}
+                  — based in {profile.location}
                 </p>
                 <p className="eyebrow text-[10px] sm:text-xs lg:text-sm text-right leading-relaxed font-mono uppercase tracking-wider">
-                  Building Apps &
-                  <br />Uncovering Insights
+                  {site.tagline ? (
+                    site.tagline
+                  ) : (
+                    <>
+                      Building Apps &
+                      <br />Uncovering Insights
+                    </>
+                  )}
                 </p>
               </div>
 
@@ -177,7 +187,7 @@ export function HomePage() {
                 <div>
                   <p className="eyebrow text-[9px] sm:text-xs uppercase tracking-[0.2em] font-mono font-semibold text-muted">Education</p>
                   <p className="mt-0.5 sm:mt-1 text-xs sm:text-base lg:text-lg font-semibold text-ink leading-snug">
-                    CGPA {profile.cgpa} · B.Tech CSE
+                    CGPA {profile.cgpa} · {profile.degree ? (profile.degree.includes('B.Tech') ? 'B.Tech CSE' : profile.degree) : 'B.Tech CSE'}
                   </p>
                 </div>
 
@@ -185,7 +195,7 @@ export function HomePage() {
                   <p className="eyebrow text-[9px] sm:text-xs uppercase tracking-[0.2em] font-mono font-semibold text-muted">Open to</p>
                   <p className="mt-0.5 sm:mt-1 flex items-center gap-1.5 text-xs sm:text-sm lg:text-base font-semibold text-ink leading-snug">
                     <span className="h-2 w-2 shrink-0 rounded-full bg-success animate-pulse" />
-                    Open to roles
+                    {site.available || 'Open to roles'}
                   </p>
                 </div>
 
@@ -234,7 +244,7 @@ export function HomePage() {
                 to="/projects"
                 className="group grid grid-cols-[auto_1fr_auto] items-center gap-4 py-7 sm:gap-8 sm:py-9"
               >
-                <span className="font-mono text-xs text-muted">0{i + 1}</span>
+                <span className="font-mono text-xs text-muted">{String(i + 1).padStart(2, '0')}</span>
                 <span className="min-w-0">
                   <span className="block truncate font-display text-2xl font-medium text-ink transition-colors group-hover:text-primary sm:text-4xl">
                     {p.name}
