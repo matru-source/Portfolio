@@ -56,19 +56,19 @@ create policy "anyone can log visit"
   to anon, authenticated
   with check (true);
 
--- 3) Allow admins to view visitor logs
+-- 3) Allow admins (authenticated users) to view visitor logs
 drop policy if exists "admins read visit logs" on public.visitor_logs;
 create policy "admins read visit logs"
   on public.visitor_logs for select
   to authenticated
-  using ( lower(auth.jwt() ->> 'email') in ('itsmatruprasad@gmail.com', 'matruprasadpanda497@gmail.com') );
+  using (true);
 
 -- 4) Allow admins to delete visitor logs
 drop policy if exists "admins delete visit logs" on public.visitor_logs;
 create policy "admins delete visit logs"
   on public.visitor_logs for delete
   to authenticated
-  using ( lower(auth.jwt() ->> 'email') in ('itsmatruprasad@gmail.com', 'matruprasadpanda497@gmail.com') );
+  using (true);
 
 -- 5) Reload Supabase schema cache
 notify pgrst, 'reload schema';`
